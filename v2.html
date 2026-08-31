@@ -3,19 +3,17 @@
    <head>
       <meta charset="UTF-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      <title>Product Growth Engineer</title>
+      <title>Tomás Mateo — Product Engineer</title>
+      <meta
+         name="description"
+         content="Tomás Mateo — product engineer in Lisbon. I build products that grow, and teams that ship faster with AI."
+      />
       <link rel="preconnect" href="https://fonts.googleapis.com" />
       <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
       <link
          href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap"
          rel="stylesheet"
       />
-      <script
-         defer
-         src="https://caparica-community-analytics-umami.vercel.app/stats"
-         data-website-id="832036b1-3c1c-4df6-83c2-5ac5681d5fdb"
-         data-domains="tomasmateo.com.ar,www.tomasmateo.com.ar"
-      ></script>
       <style>
          :root {
             --bg: #0e0e0e;
@@ -150,6 +148,58 @@
             margin-top: 3rem;
          }
 
+         /* hero kicker: name above the title */
+         .kicker {
+            margin-top: 0;
+            margin-bottom: 2rem;
+         }
+
+         .links a {
+            color: var(--muted);
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+            transition:
+               color 0.2s ease,
+               border-color 0.2s ease;
+         }
+
+         .links a:hover {
+            color: var(--text);
+            border-color: var(--text);
+         }
+
+         /* ---- company logos: white knockout marks, optically balanced ---- */
+
+         .logos {
+            margin-top: 4rem;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 3.5rem;
+         }
+
+         .logos img {
+            display: block;
+            opacity: 0.7;
+            transition: opacity 0.3s ease;
+         }
+
+         .logos img:hover {
+            opacity: 1;
+         }
+
+         .logo-ml {
+            height: 3.25rem;
+         }
+
+         .logo-sy {
+            height: 5.25rem;
+         }
+
+         .logo-f14 {
+            height: 2.25rem;
+         }
+
          .list {
             margin-top: 3rem;
          }
@@ -158,6 +208,11 @@
             font-size: 1.5rem;
             margin-bottom: 1rem;
             color: var(--text);
+         }
+
+         /* group break inside a list (e.g. one company's metrics vs the next) */
+         .list .gap {
+            margin-top: 2.5rem;
          }
 
          .cta {
@@ -436,6 +491,10 @@
                animation: fade-up 0.9s var(--ease-out) 0.9s both;
             }
 
+            .hero .kicker {
+               animation-delay: 0.15s;
+            }
+
             @keyframes fade-up {
                from {
                   opacity: 0;
@@ -506,17 +565,24 @@
          <a href="#s4">04</a>
          <a href="#s5">05</a>
          <a href="#s6">06</a>
+         <a href="#s7">07</a>
+         <a href="#s8">08</a>
       </nav>
 
       <section class="hero" id="s1">
+         <div class="small kicker">tomás mateo · product engineer · lisbon</div>
+
          <h1 id="hero-title">
             <span class="line"><span>I build products</span></span>
             <span class="line"><span>that grow</span></span>
          </h1>
 
-         <p>with clarity. with intention. with measurable impact</p>
+         <p>
+            and teams that ship faster with ai. with clarity. with intention.
+            with measurable impact
+         </p>
 
-         <div class="small">product · growth · performance · leadership</div>
+         <div class="small">product · growth · ai · leadership</div>
       </section>
 
       <section id="s2">
@@ -529,6 +595,42 @@
       </section>
 
       <section id="s3">
+         <h2 class="bloom">proof, not promises</h2>
+         <div class="list">
+            <div>12.5% mrr growth in 18 months — streamyard</div>
+            <div>26% lift in first-time broadcaster activation</div>
+            <div>300% more signups via referrals in 12 months</div>
+            <div class="gap">shipped to 4m+ active users — mercado libre</div>
+            <div>maintained an internal library used by teams company-wide</div>
+         </div>
+         <div class="small reveal">
+            streamyard, factory 14 and cargofive — all acquired while i was
+            there
+         </div>
+
+         <div class="logos reveal">
+            <img
+               src="assets/logos/mercadolibre.png"
+               alt="mercado libre"
+               class="logo-ml"
+               loading="lazy"
+            />
+            <img
+               src="assets/logos/streamyard.png"
+               alt="streamyard"
+               class="logo-sy"
+               loading="lazy"
+            />
+            <img
+               src="assets/logos/factory14.png"
+               alt="factory 14"
+               class="logo-f14"
+               loading="lazy"
+            />
+         </div>
+      </section>
+
+      <section id="s4">
          <div class="stacked-lines">
             <span>build small</span>
             <span>ship early</span>
@@ -538,7 +640,23 @@
          <div class="small reveal">velocity with intention</div>
       </section>
 
-      <section id="s4">
+      <section id="s5">
+         <h2 class="bloom">ai that compounds</h2>
+         <p class="reveal">
+            at cargo.one i lead ai adoption as a team system — building
+            workflows that automate migrations, reviews and internal tooling,
+            and sharing agent configs and prompt libraries so the gains
+            compound across the team instead of staying individual
+         </p>
+         <div class="list">
+            <div>workflows over prompts</div>
+            <div>shared agents over solo tricks</div>
+            <div>human review over blind trust</div>
+            <div>team velocity over hero coding</div>
+         </div>
+      </section>
+
+      <section id="s6">
          <h2 class="bloom">products grow through people</h2>
 
          <div class="list">
@@ -550,7 +668,7 @@
          </div>
       </section>
 
-      <section id="s5">
+      <section id="s7">
          <h2 class="bloom">growth is a system</h2>
          <div class="list">
             <div>experiments over opinions</div>
@@ -560,7 +678,7 @@
          </div>
       </section>
 
-      <section id="s6">
+      <section id="s8">
          <h2 class="bloom">
             thoughtful systems<br />
             strong teams<br />
@@ -597,6 +715,16 @@
             <p class="form-note" aria-live="polite"></p>
          </form>
 
+         <div class="small links reveal">
+            <a
+               href="https://www.linkedin.com/in/tomas-mateo"
+               target="_blank"
+               rel="noopener"
+               >linkedin</a
+            >
+            ·
+            <a href="mailto:hello@tomasmateo.com.ar">hello@tomasmateo.com.ar</a>
+         </div>
       </section>
 
       <div class="sent" id="sent-overlay" aria-live="polite" hidden>
