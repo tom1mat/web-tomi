@@ -175,29 +175,65 @@
             display: flex;
             align-items: center;
             flex-wrap: wrap;
-            gap: 3.5rem;
+            gap: 3rem;
          }
 
-         .logos img {
+         .logos a {
             display: block;
             opacity: 0.7;
             transition: opacity 0.3s ease;
          }
 
-         .logos img:hover {
+         .logos a:hover,
+         .logos a:focus-visible {
             opacity: 1;
          }
 
+         .logos img {
+            display: block;
+            max-width: 100%;
+         }
+
+         /* heights tuned so the wordmarks share an optical letter
+            size, not a matching bounding box */
+         .logo-cf {
+            height: 2rem;
+         }
+
          .logo-ml {
-            height: 3.25rem;
+            height: 3.5rem;
          }
 
          .logo-sy {
-            height: 5.25rem;
+            height: 2.125rem;
          }
 
          .logo-f14 {
-            height: 2.25rem;
+            height: 1.875rem;
+         }
+
+         /* narrow screens: scale the row down so each mark still fits
+            a phone's content width instead of being clipped */
+         @media (max-width: 480px) {
+            .logos {
+               gap: 2.25rem;
+            }
+
+            .logo-cf {
+               height: 1.6rem;
+            }
+
+            .logo-sy {
+               height: 1.7rem;
+            }
+
+            .logo-f14 {
+               height: 1.5rem;
+            }
+
+            .logo-ml {
+               height: 2.8rem;
+            }
          }
 
          .list {
@@ -609,24 +645,42 @@
          </div>
 
          <div class="logos reveal">
-            <img
-               src="assets/logos/mercadolibre.png"
-               alt="mercado libre"
-               class="logo-ml"
-               loading="lazy"
-            />
-            <img
-               src="assets/logos/streamyard.png"
-               alt="streamyard"
-               class="logo-sy"
-               loading="lazy"
-            />
-            <img
-               src="assets/logos/factory14.png"
-               alt="factory 14"
-               class="logo-f14"
-               loading="lazy"
-            />
+            <a href="https://www.mercadolibre.com" target="_blank" rel="noopener">
+               <img
+                  src="assets/logos/mercadolibre.png"
+                  alt="mercado libre"
+                  class="logo-ml"
+                  loading="lazy"
+               />
+            </a>
+            <a href="https://streamyard.com" target="_blank" rel="noopener">
+               <img
+                  src="assets/logos/streamyard.svg"
+                  alt="streamyard"
+                  class="logo-sy"
+                  loading="lazy"
+               />
+            </a>
+            <a href="https://cargofive.com" target="_blank" rel="noopener">
+               <img
+                  src="assets/logos/cargofive.svg"
+                  alt="cargofive by cargo.one"
+                  class="logo-cf"
+                  loading="lazy"
+               />
+            </a>
+            <a
+               href="https://www.glns.de/en/news/glns-advises-razor-group-on-the-acquisition-of-factory14"
+               target="_blank"
+               rel="noopener"
+            >
+               <img
+                  src="assets/logos/factory14.png"
+                  alt="factory 14"
+                  class="logo-f14"
+                  loading="lazy"
+               />
+            </a>
          </div>
       </section>
 

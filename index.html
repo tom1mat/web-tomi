@@ -609,6 +609,18 @@
             const doc = document.documentElement;
             const lerp = (a, b, t) => a + (b - a) * t;
 
+            /* ---- analytics: no-ops when umami is absent (blocked,
+                    still loading, or off-domain) ---- */
+
+            const track = (name, data) => window.umami?.track(name, data);
+
+            const once = new Set();
+            const trackOnce = (name, data) => {
+               if (once.has(name)) return;
+               once.add(name);
+               track(name, data);
+            };
+
             /* ---- section rail: track the active section ---- */
 
             const railLinks = new Map(
@@ -623,6 +635,10 @@
                      if (!e.isIntersecting) continue;
                      railLinks.forEach((a) => a.classList.remove("active"));
                      railLinks.get(e.target.id)?.classList.add("active");
+                     /* how far down the page people actually get */
+                     trackOnce("scroll-" + e.target.id, {
+                        section: e.target.id,
+                     });
                   }
                },
                { rootMargin: "-45% 0px -45%" }
@@ -631,8 +647,16 @@
                .querySelectorAll("section[id]")
                .forEach((s) => spy.observe(s));
 
-            /* ---- contact form → Google Apps Script
-                    (see docs/contact-form-setup.md) ---- */
+            document.querySelectorAll(".rail a").forEach((a) =>
+               a.addEventListener("click", () =>
+                  track("rail-nav", { to: a.hash.slice(1) })
+               )
+            );
+
+            /* ---- contact form → Google Apps Script web app.
+                    The endpoint appends to a Sheet and emails a
+                    notification; the address lives only in that
+                    script, never here. ---- */
 
             const CONTACT_ENDPOINT =
                "https://script.google.com/macros/s/AKfycbxPDBTnZUDRDozNQjCbj4DG0umVf1G9_aoq9cRZeGyUA5F3U03wvMKUX2_N1gDoBEOahg/exec";
@@ -647,7 +671,11 @@
             const sentOverlay = document.getElementById("sent-overlay");
             let momentTimer;
 
-            const celebrate = () => {
+            /* real = a message that actually reached the endpoint; the
+               bot-trap path plays the same animation but must not count
+               as a send */
+            const celebrate = (real = true) => {
+               track(real ? "contact-sent" : "contact-bot");
                contactNote.textContent = "";
                contactForm.classList.add("bye");
                setTimeout(() => {
@@ -670,6 +698,7 @@
             };
 
             contactToggle.addEventListener("click", () => {
+               track("contact-open");
                contactToggle.hidden = true;
                contactForm.hidden = false;
                contactOpenedAt = Date.now();
@@ -691,7 +720,7 @@
                   contactForm.company.value ||
                   Date.now() - contactOpenedAt < 3000
                ) {
-                  celebrate();
+                  celebrate(false);
                   return;
                }
 
@@ -970,6 +999,7 @@
 
             title.addEventListener("pointermove", (e) => {
                heroActive = true;
+               trackOnce("hero-play");
                for (let i = 0; i < chars.length; i++) {
                   const r = chars[i].getBoundingClientRect();
                   const d = Math.hypot(
