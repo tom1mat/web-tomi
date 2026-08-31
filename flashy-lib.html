@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>Product Growth Engineer</title>
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+      <link
+         href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap"
+         rel="stylesheet"
+      />
+      <style>
+         :root {
+            --bg: #0e0e0e;
+            --text: #f5f5f5;
+            --muted: #9a9a9a;
+            --accent: #ffffff;
+            --max-width: 1100px;
+         }
+
+         * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+         }
+
+         body {
+            font-family: "Inter", system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.1;
+            -webkit-font-smoothing: antialiased;
+         }
+
+         html.lenis,
+         html.lenis body {
+            height: auto;
+         }
+
+         .lenis.lenis-smooth {
+            scroll-behavior: auto !important;
+         }
+
+         .shader {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.55;
+         }
+
+         section {
+            padding: 12vh 2rem;
+            max-width: var(--max-width);
+            margin: 0 auto;
+            will-change: transform;
+         }
+
+         .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+         }
+
+         h1 {
+            font-size: clamp(3rem, 8vw, 7rem);
+            font-weight: 800;
+            letter-spacing: -0.04em;
+            cursor: default;
+         }
+
+         h1 .ch {
+            display: inline-block;
+            font-variation-settings: "wght" var(--w, 800);
+         }
+
+         h1 .w {
+            display: inline-block;
+         }
+
+         h1 .w-grow {
+            /* anchored to the left edge so growth heads right and up,
+               away from the preceding word */
+            transform-origin: 0% 78%;
+            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+         }
+
+         h1:hover .w-grow {
+            transform: translateX(0.06em) scale(1.22);
+         }
+
+         /* extra "o"s: zero-width until hover, then the word
+            stretches to "grooow." */
+         h1 .ch.o-x {
+            /* max-width (not width) so the glyph settles at its natural
+               advance width and never gets clipped when fully open */
+            max-width: 0;
+            opacity: 0;
+            overflow: clip;
+            transition:
+               max-width 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+               opacity 0.35s ease;
+         }
+
+         h1 .ch.o-x + .ch.o-x {
+            transition-delay: 0.07s;
+         }
+
+         h1:hover .ch.o-x {
+            max-width: 0.75em;
+            opacity: 1;
+         }
+
+         /* the line masks exist for the load-in; release them after so
+            the scaled-up word isn't clipped */
+         html.loaded .hero .line {
+            overflow: visible;
+         }
+
+         .hero .line {
+            display: block;
+            overflow: clip;
+         }
+
+         .hero .line > span {
+            display: block;
+         }
+
+         h2 {
+            font-size: clamp(2rem, 5vw, 4rem);
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            margin-bottom: 2rem;
+         }
+
+         h2 .split-line {
+            display: block;
+            overflow: clip;
+         }
+
+         p {
+            font-size: 1.2rem;
+            color: var(--muted);
+            max-width: 650px;
+            margin-top: 2rem;
+            line-height: 1.5;
+         }
+
+         .stacked-lines span {
+            display: block;
+            font-size: clamp(2rem, 5vw, 4rem);
+            font-weight: 700;
+            margin-bottom: 1rem;
+            letter-spacing: -0.03em;
+         }
+
+         .small {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: var(--muted);
+            margin-top: 3rem;
+         }
+
+         .num {
+            font-size: 0.8rem;
+            letter-spacing: 0.2em;
+            color: var(--muted);
+            margin-bottom: 1.5rem;
+            font-variant-numeric: tabular-nums;
+         }
+
+         .list {
+            margin-top: 3rem;
+         }
+
+         .list div {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--text);
+         }
+
+         .cta {
+            margin-top: 3rem;
+            display: inline-block;
+            padding: 0.9rem 1.5rem;
+            border: 1px solid var(--text);
+            text-decoration: none;
+            color: var(--text);
+            font-weight: 600;
+            transition:
+               background 0.2s ease,
+               color 0.2s ease;
+            will-change: transform;
+         }
+
+         .cta:hover {
+            background: var(--text);
+            color: var(--bg);
+         }
+
+         .footer {
+            padding: 8vh 2rem;
+            text-align: center;
+            color: var(--muted);
+            font-size: 0.9rem;
+         }
+
+         .progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: var(--accent);
+            transform: scaleX(0);
+            transform-origin: 0 50%;
+            z-index: 10;
+         }
+
+         @media (prefers-reduced-motion: reduce) {
+            .shader {
+               display: none;
+            }
+
+            .progress {
+               display: none;
+            }
+         }
+      </style>
+   </head>
+   <body>
+      <canvas class="shader" aria-hidden="true"></canvas>
+      <div class="progress" aria-hidden="true"></div>
+
+      <section class="hero">
+         <div class="num" aria-hidden="true">01</div>
+         <h1 id="hero-title">
+            <span class="line"><span>I build products</span></span>
+            <span class="line"><span>that grow</span></span>
+         </h1>
+
+         <p>with clarity. with intention. with measurable impact</p>
+
+         <div class="small">product · growth · performance · leadership</div>
+      </section>
+
+      <section>
+         <div class="num" aria-hidden="true">02</div>
+         <h2 class="split">no hype. just systems</h2>
+         <p class="reveal">
+            growth isn’t magic. it’s iteration, thoughtful tradeoffs, and small
+            improvements compounded over time. clear priorities. clear
+            communication. clear outcomes
+         </p>
+      </section>
+
+      <section>
+         <div class="num" aria-hidden="true">03</div>
+         <div class="stacked-lines">
+            <span>build small</span>
+            <span>ship early</span>
+            <span>measure honestly</span>
+            <span>refine relentlessly</span>
+         </div>
+         <div class="small reveal">velocity with intention</div>
+      </section>
+
+      <section>
+         <div class="num" aria-hidden="true">04</div>
+         <h2 class="split">products grow through people</h2>
+
+         <div class="list">
+            <div>communication creates clarity</div>
+            <div>clarity enables alignment</div>
+            <div>trust accelerates execution</div>
+            <div>feedback over ego</div>
+            <div>team wins over individual credit</div>
+         </div>
+      </section>
+
+      <section>
+         <div class="num" aria-hidden="true">05</div>
+         <h2 class="split">growth is a system</h2>
+         <div class="list">
+            <div>experiments over opinions</div>
+            <div>data over ego</div>
+            <div>retention over vanity</div>
+            <div>compounding over hype</div>
+         </div>
+      </section>
+
+      <section>
+         <div class="num" aria-hidden="true">06</div>
+         <h2 class="split">
+            thoughtful systems<br />
+            strong teams<br />
+            measurable growth
+         </h2>
+
+         <a href="mailto:hello@email.com" class="cta"> build with me </a>
+      </section>
+
+      <div class="footer">quiet execution. visible impact</div>
+
+      <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/ScrollTrigger.min.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/SplitText.min.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/lenis@1.3.26/dist/lenis.min.js"></script>
+      <script>
+         gsap.registerPlugin(ScrollTrigger, SplitText);
+
+         const mm = gsap.matchMedia();
+
+         mm.add("(prefers-reduced-motion: no-preference)", () => {
+            /* ---- Lenis smooth scroll, driven by GSAP's ticker ---- */
+
+            const lenis = new Lenis({ lerp: 0.12 });
+            lenis.on("scroll", ScrollTrigger.update);
+            gsap.ticker.add((time) => lenis.raf(time * 1000));
+            gsap.ticker.lagSmoothing(0);
+
+            /* ---- hero load-in ---- */
+
+            gsap.timeline({
+               defaults: { ease: "expo.out" },
+               onComplete: () =>
+                  document.documentElement.classList.add("loaded"),
+            })
+               .from(".hero .line > span", {
+                  yPercent: 110,
+                  duration: 1.1,
+                  stagger: 0.12,
+               })
+               .from(
+                  [".hero p", ".hero .small"],
+                  { y: 24, opacity: 0, duration: 0.9, stagger: 0.18 },
+                  "-=0.6"
+               );
+
+            /* ---- scroll progress hairline ---- */
+
+            gsap.to(".progress", {
+               scaleX: 1,
+               ease: "none",
+               scrollTrigger: { start: 0, end: "max", scrub: true },
+            });
+
+            /* ---- headings: per-line mask reveals.
+                    Split only once the webfont is in, so line breaks
+                    are measured against Inter, not the fallback. ---- */
+
+            document.fonts.ready.then(() => {
+            for (const h of document.querySelectorAll("h2.split")) {
+               const split = SplitText.create(h, {
+                  type: "lines",
+                  linesClass: "split-line",
+                  mask: "lines",
+               });
+               gsap.from(split.lines, {
+                  yPercent: 110,
+                  duration: 1,
+                  ease: "expo.out",
+                  stagger: 0.1,
+                  scrollTrigger: { trigger: h, start: "top 82%", once: true },
+               });
+            }
+            ScrollTrigger.refresh();
+            });
+
+            /* ---- stacked lines: scroll-scrubbed set piece ---- */
+
+            gsap.from(".stacked-lines span", {
+               y: 48,
+               opacity: 0,
+               stagger: 0.25,
+               ease: "none",
+               scrollTrigger: {
+                  trigger: ".stacked-lines",
+                  start: "top 90%",
+                  end: "top 35%",
+                  scrub: 0.5,
+               },
+            });
+
+            /* ---- lists + small reveals: staggered enter-once ---- */
+
+            for (const list of document.querySelectorAll(".list")) {
+               gsap.from(list.children, {
+                  y: 24,
+                  opacity: 0,
+                  duration: 0.9,
+                  ease: "expo.out",
+                  stagger: 0.08,
+                  scrollTrigger: { trigger: list, start: "top 85%", once: true },
+               });
+            }
+
+            gsap.utils.toArray(".reveal, .cta").forEach((el) => {
+               gsap.from(el, {
+                  y: 24,
+                  opacity: 0,
+                  duration: 0.9,
+                  ease: "expo.out",
+                  scrollTrigger: { trigger: el, start: "top 88%", once: true },
+               });
+            });
+
+            /* ---- scroll-velocity shear on sections ---- */
+
+            const sections = gsap.utils.toArray("section");
+            const skewSetter = gsap.quickSetter(sections, "skewY", "deg");
+            const clampSkew = gsap.utils.clamp(-4, 4);
+            const proxy = { skew: 0 };
+
+            ScrollTrigger.create({
+               onUpdate(self) {
+                  const skew = clampSkew(self.getVelocity() / -350);
+                  if (Math.abs(skew) > Math.abs(proxy.skew)) {
+                     proxy.skew = skew;
+                     gsap.to(proxy, {
+                        skew: 0,
+                        duration: 0.8,
+                        ease: "power3",
+                        overwrite: true,
+                        onUpdate: () => skewSetter(proxy.skew),
+                     });
+                  }
+               },
+            });
+
+            /* ---- magnetic CTA ---- */
+
+            const cta = document.querySelector(".cta");
+            const xTo = gsap.quickTo(cta, "x", { duration: 0.4, ease: "power3" });
+            const yTo = gsap.quickTo(cta, "y", { duration: 0.4, ease: "power3" });
+
+            cta.addEventListener("pointermove", (e) => {
+               const r = cta.getBoundingClientRect();
+               xTo((e.clientX - r.left - r.width / 2) * 0.3);
+               yTo((e.clientY - r.top - r.height / 2) * 0.5);
+            });
+
+            cta.addEventListener("pointerleave", () => {
+               xTo(0);
+               yTo(0);
+            });
+
+            /* ---- hero distortion: variable wght near the cursor ---- */
+
+            const title = document.getElementById("hero-title");
+            for (const span of title.querySelectorAll(".line > span")) {
+               span.innerHTML = span.textContent
+                  .split(" ")
+                  .map((w) => {
+                     const chs = [...w].map(
+                        (c) => `<span class="ch">${c}</span>`
+                     );
+                     if (w === "grow")
+                        chs.splice(
+                           3,
+                           0,
+                           '<span class="ch o-x">o</span>',
+                           '<span class="ch o-x">o</span>'
+                        );
+                     return `<span class="w${
+                        w === "grow" ? " w-grow" : ""
+                     }">${chs.join("")}</span>`;
+                  })
+                  .join(" ");
+            }
+
+            const chars = [...title.querySelectorAll(".ch")];
+            /* "grow." scales up on hover — keep it at full weight
+               instead of thinning it like the rest */
+            const inGrow = chars.map((c) => !!c.closest(".w-grow"));
+            const weights = chars.map(() => ({ w: 800 }));
+
+            title.addEventListener("pointermove", (e) => {
+               for (let i = 0; i < chars.length; i++) {
+                  const r = chars[i].getBoundingClientRect();
+                  const d = Math.hypot(
+                     e.clientX - (r.left + r.width / 2),
+                     e.clientY - (r.top + r.height / 2)
+                  );
+                  gsap.to(weights[i], {
+                     w: inGrow[i] ? 800 : 800 - 600 * Math.max(0, 1 - d / 220),
+                     duration: 0.3,
+                     overwrite: true,
+                     onUpdate: () =>
+                        chars[i].style.setProperty("--w", weights[i].w.toFixed(1)),
+                  });
+               }
+            });
+
+            title.addEventListener("pointerleave", () => {
+               for (let i = 0; i < chars.length; i++) {
+                  gsap.to(weights[i], {
+                     w: 800,
+                     duration: 0.5,
+                     overwrite: true,
+                     onUpdate: () =>
+                        chars[i].style.setProperty("--w", weights[i].w.toFixed(1)),
+                  });
+               }
+            });
+
+            /* ---- shader background (same hand-rolled flow field) ---- */
+
+            const canvas = document.querySelector(".shader");
+            const gl = canvas.getContext("webgl", {
+               antialias: false,
+               depth: false,
+               stencil: false,
+               powerPreference: "low-power",
+            });
+
+            if (gl) {
+               const frag = `
+                  precision mediump float;
+                  uniform vec2 u_res;
+                  uniform float u_time;
+                  uniform float u_scroll;
+
+                  // Simplex noise: (c) Ashima Arts & Stefan Gustavson, MIT license.
+                  // https://github.com/stegu/webgl-noise
+                  vec3 permute(vec3 x) { return mod(((x*34.0)+1.0)*x, 289.0); }
+                  float snoise(vec2 v) {
+                     const vec4 C = vec4(0.211324865405187, 0.366025403784439,
+                                         -0.577350269189626, 0.024390243902439);
+                     vec2 i = floor(v + dot(v, C.yy));
+                     vec2 x0 = v - i + dot(i, C.xx);
+                     vec2 i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
+                     vec4 x12 = x0.xyxy + C.xxzz;
+                     x12.xy -= i1;
+                     i = mod(i, 289.0);
+                     vec3 p = permute(permute(i.y + vec3(0.0, i1.y, 1.0))
+                              + i.x + vec3(0.0, i1.x, 1.0));
+                     vec3 m = max(0.5 - vec3(dot(x0,x0), dot(x12.xy,x12.xy),
+                              dot(x12.zw,x12.zw)), 0.0);
+                     m = m*m; m = m*m;
+                     vec3 x = 2.0 * fract(p * C.www) - 1.0;
+                     vec3 h = abs(x) - 0.5;
+                     vec3 ox = floor(x + 0.5);
+                     vec3 a0 = x - ox;
+                     m *= 1.79284291400159 - 0.85373472095314 * (a0*a0 + h*h);
+                     vec3 g;
+                     g.x = a0.x * x0.x + h.x * x0.y;
+                     g.yz = a0.yz * x12.xz + h.yz * x12.yw;
+                     return 130.0 * dot(m, g);
+                  }
+
+                  void main() {
+                     vec2 uv = gl_FragCoord.xy / u_res;
+                     vec2 p = uv * vec2(u_res.x / u_res.y, 1.0);
+                     float t = u_time * 0.03;
+
+                     float n = snoise(p * 1.4 + vec2(t, -t * 0.6) + u_scroll * 0.3);
+                     n += 0.5 * snoise(p * 3.2 - vec2(t * 0.7, t) - u_scroll * 0.2);
+
+                     float shade = smoothstep(0.15, 1.2, n) * 0.10;
+
+                     float grain = fract(sin(dot(gl_FragCoord.xy + u_time,
+                        vec2(12.9898, 78.233))) * 43758.5453) * 0.035;
+
+                     gl_FragColor = vec4(vec3(shade + grain), 1.0);
+                  }`;
+
+               const vert = `
+                  attribute vec2 a_pos;
+                  void main() { gl_Position = vec4(a_pos, 0.0, 1.0); }`;
+
+               const compile = (type, src) => {
+                  const s = gl.createShader(type);
+                  gl.shaderSource(s, src);
+                  gl.compileShader(s);
+                  return s;
+               };
+
+               const prog = gl.createProgram();
+               gl.attachShader(prog, compile(gl.VERTEX_SHADER, vert));
+               gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, frag));
+               gl.linkProgram(prog);
+
+               if (gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+                  gl.useProgram(prog);
+
+                  gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+                  gl.bufferData(
+                     gl.ARRAY_BUFFER,
+                     new Float32Array([-1, -1, 3, -1, -1, 3]),
+                     gl.STATIC_DRAW
+                  );
+                  const loc = gl.getAttribLocation(prog, "a_pos");
+                  gl.enableVertexAttribArray(loc);
+                  gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+
+                  const uRes = gl.getUniformLocation(prog, "u_res");
+                  const uTime = gl.getUniformLocation(prog, "u_time");
+                  const uScroll = gl.getUniformLocation(prog, "u_scroll");
+
+                  const resize = () => {
+                     canvas.width = Math.ceil(innerWidth * 0.5);
+                     canvas.height = Math.ceil(innerHeight * 0.5);
+                     gl.viewport(0, 0, canvas.width, canvas.height);
+                     gl.uniform2f(uRes, canvas.width, canvas.height);
+                  };
+                  resize();
+                  addEventListener("resize", resize, { passive: true });
+
+                  let smoothScroll = 0;
+                  gsap.ticker.add((time) => {
+                     smoothScroll +=
+                        (scrollY / innerHeight - smoothScroll) * 0.05;
+                     gl.uniform1f(uTime, time);
+                     gl.uniform1f(uScroll, smoothScroll);
+                     gl.drawArrays(gl.TRIANGLES, 0, 3);
+                  });
+               }
+            }
+         });
+      </script>
+   </body>
+</html>

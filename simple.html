@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>Product Growth Engineer</title>
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+      <link
+         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap"
+         rel="stylesheet"
+      />
+      <style>
+         :root {
+            --bg: #0e0e0e;
+            --text: #f5f5f5;
+            --muted: #9a9a9a;
+            --accent: #ffffff;
+            --max-width: 1100px;
+            --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+         }
+
+         * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+         }
+
+         body {
+            font-family: "Inter", system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.1;
+            -webkit-font-smoothing: antialiased;
+         }
+
+         section {
+            padding: 12vh 2rem;
+            max-width: var(--max-width);
+            margin: 0 auto;
+         }
+
+         .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+         }
+
+         h1 {
+            font-size: clamp(3rem, 8vw, 7rem);
+            font-weight: 800;
+            letter-spacing: -0.04em;
+         }
+
+         h2 {
+            font-size: clamp(2rem, 5vw, 4rem);
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            margin-bottom: 2rem;
+         }
+
+         p {
+            font-size: 1.2rem;
+            color: var(--muted);
+            max-width: 650px;
+            margin-top: 2rem;
+            line-height: 1.5;
+         }
+
+         .stacked-lines span {
+            display: block;
+            font-size: clamp(2rem, 5vw, 4rem);
+            font-weight: 700;
+            margin-bottom: 1rem;
+            letter-spacing: -0.03em;
+         }
+
+         .small {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: var(--muted);
+            margin-top: 3rem;
+         }
+
+         .num {
+            font-size: 0.8rem;
+            letter-spacing: 0.2em;
+            color: var(--muted);
+            margin-bottom: 1.5rem;
+            font-variant-numeric: tabular-nums;
+         }
+
+         .list {
+            margin-top: 3rem;
+         }
+
+         .list div {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--text);
+         }
+
+         .cta {
+            margin-top: 3rem;
+            display: inline-block;
+            padding: 0.9rem 1.5rem;
+            border: 1px solid var(--text);
+            text-decoration: none;
+            color: var(--text);
+            font-weight: 600;
+            transition: all 0.2s ease;
+         }
+
+         .cta:hover {
+            background: var(--text);
+            color: var(--bg);
+         }
+
+         .footer {
+            padding: 8vh 2rem;
+            text-align: center;
+            color: var(--muted);
+            font-size: 0.9rem;
+         }
+
+         /* ---- scroll progress hairline ---- */
+
+         .progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: var(--accent);
+            transform: scaleX(0);
+            transform-origin: 0 50%;
+            z-index: 10;
+         }
+
+         @supports (animation-timeline: scroll()) {
+            .progress {
+               animation: grow linear both;
+               animation-timeline: scroll(root);
+            }
+
+            @keyframes grow {
+               to {
+                  transform: scaleX(1);
+               }
+            }
+         }
+
+         /* ============================================================
+            Motion. Everything below is gated on prefers-reduced-motion:
+            reduced-motion users get the full page, already visible.
+            ============================================================ */
+
+         @media (prefers-reduced-motion: no-preference) {
+            /* -- hero load-in choreography: line masks, staggered rise -- */
+
+            .hero .line {
+               display: block;
+               overflow: clip;
+            }
+
+            .hero .line > span {
+               display: block;
+               animation: rise 0.9s var(--ease-out) both;
+            }
+
+            .hero .line:nth-child(2) > span {
+               animation-delay: 0.12s;
+            }
+
+            .hero p {
+               animation: fade-up 0.9s var(--ease-out) 0.5s both;
+            }
+
+            .hero .small {
+               animation: fade-up 0.9s var(--ease-out) 0.7s both;
+            }
+
+            @keyframes rise {
+               from {
+                  transform: translateY(110%);
+               }
+               to {
+                  transform: translateY(0);
+               }
+            }
+
+            @keyframes fade-up {
+               from {
+                  opacity: 0;
+                  transform: translateY(24px);
+               }
+               to {
+                  opacity: 1;
+                  transform: translateY(0);
+               }
+            }
+
+            /* -- scroll reveals, CSS scroll-driven path (Chrome/Edge/Safari 26+):
+                  each element scrubs in over its own viewport entry -- */
+
+            @supports (animation-timeline: view()) {
+               .reveal {
+                  animation: fade-up 1ms linear both;
+                  animation-timeline: view();
+                  animation-range: entry 10% entry 60%;
+               }
+
+               .stacked-lines span,
+               .list div {
+                  animation: fade-up 1ms linear both;
+                  animation-timeline: view();
+                  animation-range: entry 0% entry 90%;
+               }
+            }
+
+            /* -- IntersectionObserver fallback path: the script adds
+                  html.io only when scroll-driven animations are missing -- */
+
+            html.io .reveal,
+            html.io .stacked-lines span,
+            html.io .list div {
+               opacity: 0;
+               transform: translateY(24px);
+               transition:
+                  opacity 0.9s var(--ease-out),
+                  transform 0.9s var(--ease-out);
+            }
+
+            html.io .in .reveal,
+            html.io .in .stacked-lines span,
+            html.io .in .list div,
+            html.io .reveal.in {
+               opacity: 1;
+               transform: translateY(0);
+            }
+
+            html.io .in :is(.stacked-lines span, .list div):nth-child(2) {
+               transition-delay: 0.1s;
+            }
+            html.io .in :is(.stacked-lines span, .list div):nth-child(3) {
+               transition-delay: 0.2s;
+            }
+            html.io .in :is(.stacked-lines span, .list div):nth-child(4) {
+               transition-delay: 0.3s;
+            }
+            html.io .in :is(.stacked-lines span, .list div):nth-child(5) {
+               transition-delay: 0.4s;
+            }
+         }
+      </style>
+   </head>
+   <body>
+      <div class="progress" aria-hidden="true"></div>
+
+      <section class="hero">
+         <div class="num" aria-hidden="true">01</div>
+         <h1>
+            <span class="line"><span>I build products</span></span>
+            <span class="line"><span>that grow</span></span>
+         </h1>
+
+         <p>with clarity. with intention. with measurable impact</p>
+
+         <div class="small">product · growth · performance · leadership</div>
+      </section>
+
+      <section>
+         <div class="num" aria-hidden="true">02</div>
+         <h2 class="reveal">no hype. just systems</h2>
+         <p class="reveal">
+            growth isn’t magic. it’s iteration, thoughtful tradeoffs, and small
+            improvements compounded over time. clear priorities. clear
+            communication. clear outcomes
+         </p>
+      </section>
+
+      <section>
+         <div class="num" aria-hidden="true">03</div>
+         <div class="stacked-lines">
+            <span>build small</span>
+            <span>ship early</span>
+            <span>measure honestly</span>
+            <span>refine relentlessly</span>
+         </div>
+         <div class="small reveal">velocity with intention</div>
+      </section>
+
+      <section>
+         <div class="num" aria-hidden="true">04</div>
+         <h2 class="reveal">products grow through people</h2>
+
+         <div class="list">
+            <div>communication creates clarity</div>
+            <div>clarity enables alignment</div>
+            <div>trust accelerates execution</div>
+            <div>feedback over ego</div>
+            <div>team wins over individual credit</div>
+         </div>
+      </section>
+
+      <section>
+         <div class="num" aria-hidden="true">05</div>
+         <h2 class="reveal">growth is a system</h2>
+         <div class="list">
+            <div>experiments over opinions</div>
+            <div>data over ego</div>
+            <div>retention over vanity</div>
+            <div>compounding over hype</div>
+         </div>
+      </section>
+
+      <section>
+         <div class="num" aria-hidden="true">06</div>
+         <h2 class="reveal">
+            thoughtful systems<br />
+            strong teams<br />
+            measurable growth
+         </h2>
+
+         <a href="mailto:hello@email.com" class="cta reveal"> build with me </a>
+      </section>
+
+      <div class="footer">quiet execution. visible impact</div>
+
+      <script>
+         (() => {
+            const doc = document.documentElement;
+
+            const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+            const native = CSS.supports("animation-timeline: view()");
+            if (reduced || native) return;
+
+            // Fallback path: reveal on viewport entry, once.
+            doc.classList.add("io");
+
+            const progress = document.querySelector(".progress");
+            addEventListener(
+               "scroll",
+               () => {
+                  const max = doc.scrollHeight - innerHeight;
+                  progress.style.transform = `scaleX(${max ? scrollY / max : 0})`;
+               },
+               { passive: true }
+            );
+
+            const io = new IntersectionObserver(
+               (entries) => {
+                  for (const e of entries) {
+                     if (!e.isIntersecting) continue;
+                     e.target.classList.add("in");
+                     io.unobserve(e.target);
+                  }
+               },
+               { rootMargin: "0px 0px -12%" }
+            );
+
+            document
+               .querySelectorAll(".reveal, .stacked-lines, .list")
+               .forEach((el) => io.observe(el));
+         })();
+      </script>
+   </body>
+</html>

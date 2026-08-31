@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>Product Growth Engineer</title>
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link
+         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+         rel="stylesheet"
+      />
+      <style>
+         :root {
+            --bg: #0e0e0e;
+            --text: #f5f5f5;
+            --muted: #9a9a9a;
+            --accent: #ffffff;
+            --max-width: 1100px;
+         }
+
+         * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+         }
+
+         body {
+            font-family: "Inter", system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.1;
+            -webkit-font-smoothing: antialiased;
+         }
+
+         section {
+            padding: 12vh 2rem;
+            max-width: var(--max-width);
+            margin: 0 auto;
+         }
+
+         .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+         }
+
+         h1 {
+            font-size: clamp(3rem, 8vw, 7rem);
+            font-weight: 800;
+            letter-spacing: -0.04em;
+         }
+
+         h2 {
+            font-size: clamp(2rem, 5vw, 4rem);
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            margin-bottom: 2rem;
+         }
+
+         p {
+            font-size: 1.2rem;
+            color: var(--muted);
+            max-width: 650px;
+            margin-top: 2rem;
+            line-height: 1.5;
+         }
+
+         .stacked-lines span {
+            display: block;
+            font-size: clamp(2rem, 5vw, 4rem);
+            font-weight: 700;
+            margin-bottom: 1rem;
+            letter-spacing: -0.03em;
+         }
+
+         .small {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: var(--muted);
+            margin-top: 3rem;
+         }
+
+         .list {
+            margin-top: 3rem;
+         }
+
+         .list div {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--text);
+         }
+
+         .cta {
+            margin-top: 3rem;
+            display: inline-block;
+            padding: 0.9rem 1.5rem;
+            border: 1px solid var(--text);
+            text-decoration: none;
+            color: var(--text);
+            font-weight: 600;
+            transition: all 0.2s ease;
+         }
+
+         .cta:hover {
+            background: var(--text);
+            color: var(--bg);
+         }
+
+         .footer {
+            padding: 8vh 2rem;
+            text-align: center;
+            color: var(--muted);
+            font-size: 0.9rem;
+         }
+      </style>
+   </head>
+   <body>
+      <section class="hero">
+         <h1>
+            i build products<br />
+            that grow.
+         </h1>
+
+         <p>with clarity. With intention. With measurable impact.</p>
+
+         <div class="small">product · growth · performance · leadership</div>
+      </section>
+
+      <section>
+         <h2>no hype. Just systems.</h2>
+         <p>
+            growth isn’t magic. it’s iteration, thoughtful tradeoffs, and small
+            improvements compounded over time. clear priorities. clear
+            communication. clear outcomes.
+         </p>
+      </section>
+
+      <section>
+         <div class="stacked-lines">
+            <span>build small.</span>
+            <span>ship early.</span>
+            <span>measure honestly.</span>
+            <span>refine relentlessly.</span>
+         </div>
+         <div class="small">velocity with intention.</div>
+      </section>
+
+      <section>
+         <h2>products grow through people.</h2>
+
+         <div class="list">
+            <div>communication creates clarity.</div>
+            <div>clarity enables alignment.</div>
+            <div>trust accelerates execution.</div>
+            <div>feedback over ego.</div>
+            <div>team wins over individual credit.</div>
+         </div>
+      </section>
+
+      <section>
+         <h2>growth is a system.</h2>
+         <div class="list">
+            <div>experiments over opinions.</div>
+            <div>data over ego.</div>
+            <div>retention over vanity.</div>
+            <div>compounding over hype.</div>
+         </div>
+      </section>
+
+      <section>
+         <h2>
+            thoughtful systems.<br />
+            strong teams.<br />
+            measurable growth.
+         </h2>
+
+         <a href="mailto:hello@email.com" class="cta"> build with me </a>
+      </section>
+
+      <div class="footer">quiet execution. visible impact.</div>
+   </body>
+</html>
