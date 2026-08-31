@@ -38,6 +38,7 @@
             padding: 12vh 2rem;
             max-width: var(--max-width);
             margin: 0 auto;
+            position: relative;
          }
 
          .hero {
@@ -85,14 +86,6 @@
             margin-top: 3rem;
          }
 
-         .num {
-            font-size: 0.8rem;
-            letter-spacing: 0.2em;
-            color: var(--muted);
-            margin-bottom: 1.5rem;
-            font-variant-numeric: tabular-nums;
-         }
-
          .list {
             margin-top: 3rem;
          }
@@ -109,6 +102,9 @@
             padding: 0.9rem 1.5rem;
             border: 1px solid var(--text);
             text-decoration: none;
+            font: inherit;
+            background: transparent;
+            cursor: pointer;
             color: var(--text);
             font-weight: 600;
             transition: all 0.2s ease;
@@ -117,6 +113,69 @@
          .cta:hover {
             background: var(--text);
             color: var(--bg);
+         }
+
+         /* ---- contact form ---- */
+
+         .contact-form[hidden],
+         .form-done[hidden],
+         #contact-toggle[hidden],
+         #contact-done[hidden] {
+            display: none;
+         }
+
+         .contact-form {
+            margin-top: 3rem;
+            display: grid;
+            gap: 1rem;
+            max-width: 650px;
+         }
+
+         .contact-form input,
+         .contact-form textarea {
+            font: inherit;
+            font-size: 1rem;
+            background: transparent;
+            border: 1px solid var(--muted);
+            border-radius: 0;
+            color: var(--text);
+            padding: 0.9rem 1rem;
+            outline: none;
+            transition: border-color 0.3s ease;
+         }
+
+         .contact-form textarea {
+            resize: vertical;
+            min-height: 7rem;
+         }
+
+         .contact-form input:focus,
+         .contact-form textarea:focus {
+            border-color: var(--text);
+         }
+
+         .contact-form ::placeholder {
+            color: var(--muted);
+         }
+
+         .contact-form .cta {
+            margin-top: 0;
+            justify-self: start;
+         }
+
+         /* honeypot: offscreen, not display:none (bots sniff for that) */
+         .contact-form .hp {
+            position: absolute;
+            left: -9999px;
+            opacity: 0;
+            pointer-events: none;
+         }
+
+         .form-note {
+            font-size: 0.9rem;
+            color: var(--muted);
+            min-height: 1.2em;
+            margin: 0;
          }
 
          .footer {
@@ -153,12 +212,71 @@
             }
          }
 
+         /* ---- section rail ---- */
+
+         .rail {
+            position: fixed;
+            left: 1.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            z-index: 10;
+         }
+
+         .rail a {
+            font-size: 0.7rem;
+            letter-spacing: 0.15em;
+            text-decoration: none;
+            color: var(--muted);
+            opacity: 0.6;
+            font-variant-numeric: tabular-nums;
+            transition:
+               opacity 0.3s ease,
+               color 0.3s ease,
+               transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+         }
+
+         .rail a:hover {
+            transform: translateX(0.5rem);
+         }
+
+         .rail a:hover,
+         .rail a.active {
+            color: var(--text);
+            opacity: 1;
+         }
+
+         @media (max-width: 720px) {
+            .rail {
+               display: none;
+            }
+         }
+
          /* ============================================================
             Motion. Everything below is gated on prefers-reduced-motion:
             reduced-motion users get the full page, already visible.
             ============================================================ */
 
          @media (prefers-reduced-motion: no-preference) {
+            html {
+               scroll-behavior: smooth;
+            }
+
+            .contact-form {
+               opacity: 0;
+               transform: translateY(16px);
+               transition:
+                  opacity 0.5s ease,
+                  transform 0.5s var(--ease-out);
+            }
+
+            .contact-form.open {
+               opacity: 1;
+               transform: none;
+            }
+
             /* -- hero load-in choreography: line masks, staggered rise -- */
 
             .hero .line {
@@ -260,8 +378,16 @@
    <body>
       <div class="progress" aria-hidden="true"></div>
 
-      <section class="hero">
-         <div class="num" aria-hidden="true">01</div>
+      <nav class="rail" aria-label="section navigation">
+         <a href="#s1">01</a>
+         <a href="#s2">02</a>
+         <a href="#s3">03</a>
+         <a href="#s4">04</a>
+         <a href="#s5">05</a>
+         <a href="#s6">06</a>
+      </nav>
+
+      <section class="hero" id="s1">
          <h1>
             <span class="line"><span>I build products</span></span>
             <span class="line"><span>that grow</span></span>
@@ -272,8 +398,7 @@
          <div class="small">product · growth · performance · leadership</div>
       </section>
 
-      <section>
-         <div class="num" aria-hidden="true">02</div>
+      <section id="s2">
          <h2 class="reveal">no hype. just systems</h2>
          <p class="reveal">
             growth isn’t magic. it’s iteration, thoughtful tradeoffs, and small
@@ -282,8 +407,7 @@
          </p>
       </section>
 
-      <section>
-         <div class="num" aria-hidden="true">03</div>
+      <section id="s3">
          <div class="stacked-lines">
             <span>build small</span>
             <span>ship early</span>
@@ -293,8 +417,7 @@
          <div class="small reveal">velocity with intention</div>
       </section>
 
-      <section>
-         <div class="num" aria-hidden="true">04</div>
+      <section id="s4">
          <h2 class="reveal">products grow through people</h2>
 
          <div class="list">
@@ -306,8 +429,7 @@
          </div>
       </section>
 
-      <section>
-         <div class="num" aria-hidden="true">05</div>
+      <section id="s5">
          <h2 class="reveal">growth is a system</h2>
          <div class="list">
             <div>experiments over opinions</div>
@@ -317,15 +439,46 @@
          </div>
       </section>
 
-      <section>
-         <div class="num" aria-hidden="true">06</div>
+      <section id="s6">
          <h2 class="reveal">
             thoughtful systems<br />
             strong teams<br />
             measurable growth
          </h2>
 
-         <a href="mailto:hello@email.com" class="cta reveal"> build with me </a>
+         <button type="button" id="contact-toggle" class="cta reveal">
+            build with me
+         </button>
+
+         <form id="contact-form" class="contact-form" hidden>
+            <input
+               type="email"
+               name="email"
+               placeholder="your email"
+               autocomplete="email"
+               required
+            />
+            <textarea
+               name="message"
+               rows="4"
+               placeholder="what should we build?"
+               required
+            ></textarea>
+            <input
+               type="text"
+               name="company"
+               class="hp"
+               tabindex="-1"
+               autocomplete="off"
+               aria-hidden="true"
+            />
+            <button type="submit" class="cta">send</button>
+            <p class="form-note" aria-live="polite"></p>
+         </form>
+
+         <div id="contact-done" class="small" hidden>
+            message sent — I’ll reply soon
+         </div>
       </section>
 
       <div class="footer">quiet execution. visible impact</div>
@@ -333,6 +486,96 @@
       <script>
          (() => {
             const doc = document.documentElement;
+
+            /* ---- section rail: track the active section ---- */
+
+            const railLinks = new Map(
+               [...document.querySelectorAll(".rail a")].map((a) => [
+                  a.hash.slice(1),
+                  a,
+               ])
+            );
+            const spy = new IntersectionObserver(
+               (entries) => {
+                  for (const e of entries) {
+                     if (!e.isIntersecting) continue;
+                     railLinks.forEach((a) => a.classList.remove("active"));
+                     railLinks.get(e.target.id)?.classList.add("active");
+                  }
+               },
+               { rootMargin: "-45% 0px -45%" }
+            );
+            document
+               .querySelectorAll("section[id]")
+               .forEach((s) => spy.observe(s));
+
+            /* ---- contact form → Google Apps Script
+                    (see docs/contact-form-setup.md) ---- */
+
+            const CONTACT_ENDPOINT =
+               "https://script.google.com/macros/s/AKfycbxPDBTnZUDRDozNQjCbj4DG0umVf1G9_aoq9cRZeGyUA5F3U03wvMKUX2_N1gDoBEOahg/exec";
+
+            const contactToggle = document.getElementById("contact-toggle");
+            const contactForm = document.getElementById("contact-form");
+            const contactDone = document.getElementById("contact-done");
+            const contactNote = contactForm.querySelector(".form-note");
+            let contactOpenedAt = 0;
+
+            contactToggle.addEventListener("click", () => {
+               contactToggle.hidden = true;
+               contactForm.hidden = false;
+               contactOpenedAt = Date.now();
+               requestAnimationFrame(() => contactForm.classList.add("open"));
+               contactForm.email.focus();
+            });
+
+            contactForm.addEventListener("submit", async (e) => {
+               e.preventDefault();
+               const email = contactForm.email.value.trim();
+               const message = contactForm.message.value.trim();
+               if (!email || !message) {
+                  contactNote.textContent = "both fields, please";
+                  return;
+               }
+
+               /* bots: honeypot filled, or submitted impossibly fast */
+               if (
+                  contactForm.company.value ||
+                  Date.now() - contactOpenedAt < 3000
+               ) {
+                  contactForm.hidden = true;
+                  contactDone.hidden = false;
+                  return;
+               }
+
+               if (!CONTACT_ENDPOINT) {
+                  contactNote.textContent =
+                     "form isn’t wired up yet — check back soon";
+                  return;
+               }
+
+               const sendBtn = contactForm.querySelector("[type=submit]");
+               sendBtn.disabled = true;
+               contactNote.textContent = "sending…";
+
+               try {
+                  /* text/plain keeps this a CORS "simple request",
+                     which Apps Script web apps accept and answer */
+                  const res = await fetch(CONTACT_ENDPOINT, {
+                     method: "POST",
+                     headers: { "Content-Type": "text/plain;charset=utf-8" },
+                     body: JSON.stringify({ email, message }),
+                  });
+                  const out = await res.json();
+                  if (!out.ok) throw new Error(out.error);
+                  contactForm.hidden = true;
+                  contactDone.hidden = false;
+               } catch {
+                  contactNote.textContent =
+                     "something broke — try again in a minute";
+                  sendBtn.disabled = false;
+               }
+            });
 
             const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
             const native = CSS.supports("animation-timeline: view()");
