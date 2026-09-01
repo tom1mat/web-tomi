@@ -3,7 +3,7 @@
    <head>
       <meta charset="UTF-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      <title>Tomás Mateo — Product Engineer</title>
+      <title>Tomás Mateo · Product Engineer</title>
       <meta
          name="description"
          content="Product engineer in Lisbon. I build products that grow, and teams that ship faster with AI. Technical lead at cargo.one, previously StreamYard and Mercado Libre."
@@ -18,7 +18,7 @@
       <!-- link previews (linkedin, slack, whatsapp, x) -->
       <meta property="og:type" content="website" />
       <meta property="og:site_name" content="Tomás Mateo" />
-      <meta property="og:title" content="Tomás Mateo — Product Engineer" />
+      <meta property="og:title" content="Tomás Mateo · Product Engineer" />
       <meta
          property="og:description"
          content="I build products that grow, and teams that ship faster with AI. Technical lead at cargo.one, previously StreamYard and Mercado Libre."
@@ -32,12 +32,12 @@
       <meta property="og:image:height" content="630" />
       <meta
          property="og:image:alt"
-         content="Tomás Mateo, product engineer — i build products that grow, and teams that ship faster with ai"
+         content="Tomás Mateo, product engineer: i build products that grow, and teams that ship faster with ai"
       />
       <meta property="og:locale" content="en_US" />
 
       <meta name="twitter:card" content="summary_large_image" />
-      <meta name="twitter:title" content="Tomás Mateo — Product Engineer" />
+      <meta name="twitter:title" content="Tomás Mateo · Product Engineer" />
       <meta
          name="twitter:description"
          content="I build products that grow, and teams that ship faster with AI. Technical lead at cargo.one, previously StreamYard and Mercado Libre."
@@ -46,6 +46,12 @@
          name="twitter:image"
          content="https://tomasmateo.com.ar/assets/og-image.png"
       />
+      <script
+         defer
+         src="https://caparica-community-analytics-umami.vercel.app/stats"
+         data-website-id="832036b1-3c1c-4df6-83c2-5ac5681d5fdb"
+         data-domains="tomasmateo.com.ar,www.tomasmateo.com.ar"
+      ></script>
 
       <link rel="preconnect" href="https://fonts.googleapis.com" />
       <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -53,19 +59,16 @@
          href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap"
          rel="stylesheet"
       />
-      <script
-         defer
-         src="https://caparica-community-analytics-umami.vercel.app/stats"
-         data-website-id="832036b1-3c1c-4df6-83c2-5ac5681d5fdb"
-         data-domains="tomasmateo.com.ar,www.tomasmateo.com.ar"
-      ></script>
       <style>
          :root {
             --bg: #0e0e0e;
             --text: #f5f5f5;
             --muted: #9a9a9a;
             --accent: #ffffff;
-            --max-width: 1100px;
+            /* the hero headline at its capped size measures ~787px; the
+               column is sized to it so nothing on the page grows further
+               right than the h1 does */
+            --max-width: 900px;
             --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
          }
 
@@ -99,6 +102,48 @@
             position: relative;
          }
 
+         /* Leading trim. A line box is taller than the letters inside it,
+            so an identical margin reads smaller under a 112px headline than
+            under a button — that residue is what stops even margins from
+            looking even. These zero-height boxes pull each element's edge
+            back to its text. Written in em and lh so they track the fluid
+            type instead of being tuned for one viewport; where `lh` is
+            unsupported the calc is simply dropped and nothing shifts. */
+         h1::before,
+         h2::before,
+         p::before,
+         h1::after,
+         h2::after,
+         p::after {
+            content: "";
+            /* table, not block: a zero-height block self-collapses and its
+               negative margin escapes to shrink the gap instead of tightening
+               the box */
+            display: table;
+         }
+
+         h1::before,
+         h2::before,
+         p::before {
+            margin-bottom: calc((1em - 1lh) / 2);
+         }
+
+         h1::after,
+         h2::after,
+         p::after {
+            margin-top: calc((1em - 1lh) / 2);
+         }
+
+         /* One vertical rhythm. Every block sits the same distance below
+            the one before it, whatever the two elements are. Previously each
+            element carried its own margin and the winner depended on whether
+            the pair happened to collapse, which left nine different gaps on
+            the page — the worst being an inline-block button, whose margin
+            cannot collapse, sitting 83px below its heading. */
+         section > * + * {
+            margin-top: 3rem;
+         }
+
          .hero {
             min-height: 100vh;
             display: flex;
@@ -127,33 +172,83 @@
             /* anchored to the left edge so growth heads right and up,
                away from the preceding word */
             transform-origin: 0% 78%;
-            transition: transform 0.5s var(--ease-out);
          }
 
-         h1:hover .w-grow {
-            transform: translateX(0.06em) scale(1.22);
-         }
-
-         /* extra "o"s: zero-width until hover, then the word
-            stretches to "grooow." */
+         /* extra "o"s: zero-width until the pop opens them */
          h1 .ch.o-x {
             /* max-width (not width) so the glyph settles at its natural
                advance width and never gets clipped when fully open */
             max-width: 0;
             opacity: 0;
             overflow: clip;
-            transition:
-               max-width 0.5s var(--ease-out),
-               opacity 0.35s ease;
          }
 
-         h1 .ch.o-x + .ch.o-x {
-            transition-delay: 0.07s;
+         /* Slingshot, fired by JS on pointer enter: the word draws out to
+            full stretch and decelerates into it, holds under tension, then
+            releases far faster than it went out and overshoots twice before
+            settling. The bounce lives in the scale, because max-width only clips,
+            so the extra "o"s can't overshoot, they just ride the timing. */
+         @keyframes word-pop {
+            0% {
+               transform: none;
+               animation-timing-function: cubic-bezier(0.2, 0.68, 0.32, 1);
+            }
+            40% {
+               transform: translateX(0.08em) scale(1.32);
+            }
+            62% {
+               /* held at full stretch */
+               transform: translateX(0.08em) scale(1.32);
+               animation-timing-function: cubic-bezier(0.6, 0, 0.15, 1);
+            }
+            76% {
+               transform: translateX(0.005em) scale(0.93);
+               animation-timing-function: ease-out;
+            }
+            87% {
+               transform: scale(1.05);
+               animation-timing-function: ease-in-out;
+            }
+            94% {
+               transform: scale(0.985);
+               animation-timing-function: ease-out;
+            }
+            100% {
+               transform: none;
+            }
          }
 
-         h1:hover .ch.o-x {
-            max-width: 0.75em;
-            opacity: 1;
+         @keyframes o-pop {
+            0% {
+               max-width: 0;
+               opacity: 0;
+               animation-timing-function: cubic-bezier(0.2, 0.68, 0.32, 1);
+            }
+            40% {
+               max-width: 0.8em;
+               opacity: 1;
+            }
+            62% {
+               max-width: 0.8em;
+               opacity: 1;
+               animation-timing-function: cubic-bezier(0.6, 0, 0.15, 1);
+            }
+            78% {
+               max-width: 0;
+               opacity: 0;
+            }
+            100% {
+               max-width: 0;
+               opacity: 0;
+            }
+         }
+
+         h1.grown .w-grow {
+            animation: word-pop 1s both;
+         }
+
+         h1.grown .ch.o-x {
+            animation: o-pop 1s both;
          }
 
          .hero .line {
@@ -164,18 +259,21 @@
             font-size: clamp(2rem, 5vw, 4rem);
             font-weight: 700;
             letter-spacing: -0.03em;
-            margin-bottom: 2rem;
          }
 
          p {
             font-size: 1.2rem;
             color: var(--muted);
             max-width: 650px;
-            margin-top: 2rem;
             line-height: 1.5;
          }
 
-         /* direct children only — the char splitter injects nested spans
+         /* the hero tagline reads as part of the headline, not as body copy */
+         .hero p {
+            color: var(--text);
+         }
+
+         /* direct children only: the char splitter injects nested spans
             that must stay inline */
          .stacked-lines > span {
             display: block;
@@ -190,11 +288,98 @@
             text-transform: uppercase;
             letter-spacing: 0.15em;
             color: var(--muted);
-            margin-top: 3rem;
          }
 
-         .list {
-            margin-top: 3rem;
+         .links a {
+            color: var(--muted);
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+            transition:
+               color 0.2s ease,
+               border-color 0.2s ease;
+         }
+
+         .links a:hover {
+            color: var(--text);
+            border-color: var(--text);
+         }
+
+         /* ---- company logos: white knockout marks, optically balanced ---- */
+
+         .logos {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 2rem;
+         }
+
+         .logos a {
+            display: block;
+            opacity: 0.7;
+            transition: opacity 0.3s ease;
+         }
+
+         .logos a:hover,
+         .logos a:focus-visible {
+            opacity: 1;
+         }
+
+         .logos img {
+            display: block;
+            max-width: 100%;
+         }
+
+         /* Heights tuned so the wordmarks share an optical letter size, not
+            a matching bounding box. Mercado Libre stacks onto two lines, so
+            matching its letters to the rest still leaves it reading heavier
+            so it is pulled down further to compensate. The whole row is
+            scaled to fit the content column beside the hero headline. */
+         .logo-cf {
+            height: 1.375rem;
+         }
+
+         .logo-co {
+            height: 1.375rem;
+         }
+
+         .logo-ml {
+            height: 1.95rem;
+         }
+
+         .logo-sy {
+            height: 1.5rem;
+         }
+
+         .logo-f14 {
+            height: 1.3rem;
+         }
+
+         /* narrow screens: scale the row down so each mark still fits
+            a phone's content width instead of being clipped */
+         @media (max-width: 480px) {
+            .logos {
+               gap: 2.25rem;
+            }
+
+            .logo-cf {
+               height: 1.2rem;
+            }
+
+            .logo-co {
+               height: 1.2rem;
+            }
+
+            .logo-sy {
+               height: 1.3rem;
+            }
+
+            .logo-f14 {
+               height: 1.15rem;
+            }
+
+            .logo-ml {
+               height: 1.65rem;
+            }
          }
 
          .list div {
@@ -203,8 +388,51 @@
             color: var(--text);
          }
 
+         /* The metric lines all land around 500px wide. Capping the list
+            just above that stops the one long line running the full column
+            and breaks it after "design system", where the sentence divides
+            anyway. The others are untouched: none of them reach the cap. */
+         .metrics {
+            max-width: 36rem;
+         }
+
+         .metrics div {
+            line-height: 1.25;
+            color: var(--muted);
+         }
+
+         /* the number is the claim, so it keeps the page's full white and
+            weight while the sentence around it drops back */
+         .num {
+            color: var(--text);
+            font-weight: 700;
+         }
+
+         /* group break inside a list (e.g. one company's metrics vs the next) */
+         .list .gap {
+            margin-top: 2.5rem;
+         }
+
+         /* Company names carry the receipts, so the underline stays visible
+            rather than waiting for a hover the phone will never send. Drawn
+            with a border on an inline-block rather than text-decoration, so
+            it does not thicken when the letters bloom to full weight. */
+         .src {
+            color: inherit;
+            text-decoration: none;
+            border-bottom: 1px solid rgba(154, 154, 154, 0.45);
+            transition:
+               border-color 0.25s ease,
+               color 0.25s ease;
+         }
+
+         .src:hover,
+         .src:focus-visible {
+            color: var(--text);
+            border-bottom-color: var(--text);
+         }
+
          .cta {
-            margin-top: 3rem;
             display: inline-block;
             padding: 0.9rem 1.5rem;
             border: 1px solid var(--text);
@@ -234,7 +462,6 @@
          }
 
          .contact-form {
-            margin-top: 3rem;
             display: grid;
             gap: 1rem;
             max-width: 650px;
@@ -521,7 +748,38 @@
                font-variation-settings: "wght" 400;
             }
 
+            /* the bloom sets a weight on every character, which would undo
+               the number's emphasis unless it is restated here */
+            .list.in .num .ch {
+               font-variation-settings: "wght" 700;
+            }
+
             /* -- prose, tagline, CTA: quiet fade -- */
+
+            /* the link underline is a border on the <a>, which the letter
+               bloom cannot touch — without this it hangs in empty space
+               until its text catches up. --i is the index of the link's
+               first letter, so it lands on the same beat. */
+            html.io .list .src {
+               border-bottom-color: transparent;
+               transition:
+                  border-color 0.45s ease,
+                  color 0.25s ease;
+               transition-delay: calc(
+                  var(--r, 0) * 130ms + var(--i, 0) * 14ms
+               );
+            }
+
+            html.io .list.in .src {
+               border-bottom-color: rgba(154, 154, 154, 0.45);
+            }
+
+            html.io .list .src:hover,
+            html.io .list .src:focus-visible {
+               color: var(--text);
+               border-bottom-color: var(--text);
+               transition-delay: 0s;
+            }
 
             html.io .reveal {
                opacity: 0;
@@ -549,6 +807,8 @@
          <a href="#s4">04</a>
          <a href="#s5">05</a>
          <a href="#s6">06</a>
+         <a href="#s7">07</a>
+         <a href="#s8">08</a>
       </nav>
 
       <section class="hero" id="s1">
@@ -557,9 +817,12 @@
             <span class="line"><span>that grow</span></span>
          </h1>
 
-         <p>with clarity. with intention. with measurable impact</p>
+         <p>
+            and teams that ship faster with ai. with clarity. with intention.
+            with measurable impact
+         </p>
 
-         <div class="small">product · growth · performance · leadership</div>
+         <div class="small">product · growth · ai · leadership</div>
       </section>
 
       <section id="s2">
@@ -572,6 +835,111 @@
       </section>
 
       <section id="s3">
+         <h2 class="bloom">proof, not promises</h2>
+         <div class="list metrics">
+            <div>
+               <b class="num">12.5%</b> mrr growth in 18 months at
+               <a
+                  class="src"
+                  href="https://streamyard.com"
+                  target="_blank"
+                  rel="noopener"
+                  >streamyard</a
+               >
+            </div>
+            <div><b class="num">26%</b> lift in first-time broadcaster activation</div>
+            <div><b class="num">300%</b> more signups via referrals in 12 months</div>
+            <div class="gap">
+               shipped to <b class="num">4m+</b> active users at
+               <a
+                  class="src"
+                  href="https://www.mercadolibre.com"
+                  target="_blank"
+                  rel="noopener"
+                  >mercado libre</a
+               >
+            </div>
+            <div>
+               maintained the shared library and design&nbsp;system <b class="num">~10k</b>
+               engineers built on
+            </div>
+         </div>
+         <!-- here the claim is the acquisition itself, so each name links to
+              the announcement rather than to the company -->
+         <div class="small reveal">
+            <a
+               class="src"
+               href="https://en.wikipedia.org/wiki/StreamYard#:~:text=technology%20company%20Bending%20Spoons%20confirmed%20it%20has%20agreed%20to%20acquire%20StreamYard%20Top%20Corp%20(also%20known%20as%20Hopin)%2C%20which%20owns%20and%20operates%20the%20products%20StreamYard%2C%20Streamable%2C%20and%20Superwave"
+               target="_blank"
+               rel="noopener"
+               >streamyard</a
+            >,
+            <a
+               class="src"
+               href="https://www.glns.de/en/news/glns-advises-razor-group-on-the-acquisition-of-factory14"
+               target="_blank"
+               rel="noopener"
+               >factory 14</a
+            >
+            and
+            <a
+               class="src"
+               href="https://www.cargo.one/press/cargofive-acquisition-ai-os-multimodal-launch"
+               target="_blank"
+               rel="noopener"
+               >cargofive</a
+            >: all acquired while i was there
+         </div>
+
+         <div class="logos reveal">
+            <a href="https://www.mercadolibre.com" target="_blank" rel="noopener">
+               <img
+                  src="assets/logos/mercadolibre.png"
+                  alt="mercado libre"
+                  class="logo-ml"
+                  loading="lazy"
+               />
+            </a>
+            <a href="https://streamyard.com" target="_blank" rel="noopener">
+               <img
+                  src="assets/logos/streamyard.svg"
+                  alt="streamyard"
+                  class="logo-sy"
+                  loading="lazy"
+               />
+            </a>
+            <a href="https://cargofive.com" target="_blank" rel="noopener">
+               <img
+                  src="assets/logos/cargofive.svg"
+                  alt="cargofive by cargo.one"
+                  class="logo-cf"
+                  loading="lazy"
+               />
+            </a>
+            <a href="https://www.cargo.one" target="_blank" rel="noopener">
+               <img
+                  src="assets/logos/cargoone.svg"
+                  alt="cargo.one"
+                  class="logo-co"
+                  loading="lazy"
+               />
+            </a>
+            <a
+               href="https://www.glns.de/en/news/glns-advises-razor-group-on-the-acquisition-of-factory14"
+               target="_blank"
+               rel="noopener"
+            >
+               <img
+                  src="assets/logos/factory14.png"
+                  alt="factory 14"
+                  class="logo-f14"
+                  loading="lazy"
+               />
+            </a>
+         </div>
+      </section>
+
+      <section id="s4">
          <div class="stacked-lines">
             <span>build small</span>
             <span>ship early</span>
@@ -581,7 +949,23 @@
          <div class="small reveal">velocity with intention</div>
       </section>
 
-      <section id="s4">
+      <section id="s5">
+         <h2 class="bloom">ai that compounds</h2>
+         <p class="reveal">
+            at cargo.one i lead ai adoption as a team system, building
+            workflows that automate migrations, reviews and internal tooling,
+            and sharing agent configs and prompt libraries so the gains
+            compound across the team instead of staying individual
+         </p>
+         <div class="list">
+            <div>workflows over prompts</div>
+            <div>shared agents over solo tricks</div>
+            <div>human review over blind trust</div>
+            <div>team velocity over hero coding</div>
+         </div>
+      </section>
+
+      <section id="s6">
          <h2 class="bloom">products grow through people</h2>
 
          <div class="list">
@@ -593,7 +977,7 @@
          </div>
       </section>
 
-      <section id="s5">
+      <section id="s7">
          <h2 class="bloom">growth is a system</h2>
          <div class="list">
             <div>experiments over opinions</div>
@@ -603,7 +987,7 @@
          </div>
       </section>
 
-      <section id="s6">
+      <section id="s8">
          <h2 class="bloom">
             thoughtful systems<br />
             strong teams<br />
@@ -640,6 +1024,18 @@
             <p class="form-note" aria-live="polite"></p>
          </form>
 
+         <!-- deliberately not .reveal: contact details are the one thing
+              that must never depend on a scroll trigger firing -->
+         <div class="small links">
+            <a
+               href="https://www.linkedin.com/in/tomas-mateo/"
+               target="_blank"
+               rel="noopener"
+               >linkedin</a
+            >
+            ·
+            <a href="mailto:hello@tomasmateo.com.ar">hello@tomasmateo.com.ar</a>
+         </div>
       </section>
 
       <div class="sent" id="sent-overlay" aria-live="polite" hidden>
@@ -696,10 +1092,8 @@
                )
             );
 
-            /* ---- contact form → Google Apps Script web app.
-                    The endpoint appends to a Sheet and emails a
-                    notification; the address lives only in that
-                    script, never here. ---- */
+            /* ---- contact form → Google Apps Script
+                    (see docs/contact-form-setup.md) ---- */
 
             const CONTACT_ENDPOINT =
                "https://script.google.com/macros/s/AKfycbxPDBTnZUDRDozNQjCbj4DG0umVf1G9_aoq9cRZeGyUA5F3U03wvMKUX2_N1gDoBEOahg/exec";
@@ -769,7 +1163,7 @@
 
                if (!CONTACT_ENDPOINT) {
                   contactNote.textContent =
-                     "form isn’t wired up yet — check back soon";
+                     "form isn’t wired up yet, check back soon";
                   return;
                }
 
@@ -790,7 +1184,7 @@
                   celebrate();
                } catch {
                   contactNote.textContent =
-                     "something broke — try again in a minute";
+                     "something broke, try again in a minute";
                   sendBtn.disabled = false;
                }
             });
@@ -815,20 +1209,31 @@
 
             /* ---- weight-bloom reveals: split display text into chars ---- */
 
-            const splitChars = (el) => {
-               let i = 0;
+            /* Recurses, so an inline <a> inside a line still gets its
+               letters wrapped and blooms with everything around it. Passing
+               child elements straight through would leave a link sitting at
+               full opacity while the rest of the sentence faded in. */
+            const splitChars = (el, counter) => {
+               const n = counter ?? { i: 0 };
+
                el.innerHTML = [...el.childNodes]
-                  .map((n) => {
-                     if (n.nodeType !== Node.TEXT_NODE)
-                        return n.outerHTML ?? "";
-                     return n.textContent
+                  .map((node) => {
+                     if (node.nodeType === Node.ELEMENT_NODE) {
+                        /* where this element's text falls in the stagger, so
+                           its own styling can wait for its letters */
+                        node.style.setProperty("--i", n.i);
+                        splitChars(node, n);
+                        return node.outerHTML;
+                     }
+                     if (node.nodeType !== Node.TEXT_NODE) return "";
+                     return node.textContent
                         .split(/(\s+)/)
                         .map((tok) =>
                            tok.trim()
                               ? `<span class="w">${[...tok]
                                    .map(
                                       (c) =>
-                                         `<span class="ch" style="--i:${i++}">${c}</span>`
+                                         `<span class="ch" style="--i:${n.i++}">${c}</span>`
                                    )
                                    .join("")}</span>`
                               : tok
@@ -857,7 +1262,10 @@
                      io.unobserve(e.target);
                   }
                },
-               { rootMargin: "0px 0px -12%" }
+               /* the dead zone must stay smaller than a section's 12vh
+                  bottom padding, or the last element on the page sits
+                  inside it at max scroll and never reveals */
+               { rootMargin: "0px 0px -6%" }
             );
 
             document
@@ -1023,41 +1431,73 @@
             }
 
             const chars = [...title.querySelectorAll(".ch")];
-            /* "grow" scales up on hover — keep it at full weight
-               instead of thinning it like the rest */
-            const inGrow = chars.map((c) => !!c.closest(".w-grow"));
             const weights = chars.map(() => 100);
-            let targets = chars.map(() => 100);
+            const targets = chars.map(() => 100);
             let heroActive = true;
 
             /* load-in: letters bloom from hairline to full weight,
-               staggered left to right — same language as the hover */
+               staggered left to right. This is the only thing driving
+               --w now; the headline is static once it has settled. */
+            const INTRO_DELAY = 250;
+            const INTRO_STEP = 30;
+
             chars.forEach((c, i) => {
                c.style.setProperty("--w", "100");
                setTimeout(() => {
                   targets[i] = 800;
                   if (!c.classList.contains("o-x")) c.classList.add("on");
-               }, 250 + i * 30);
+               }, INTRO_DELAY + i * INTRO_STEP);
             });
 
-            title.addEventListener("pointermove", (e) => {
-               heroActive = true;
+            /* the beat the final letter (the "w" of "grow") lands on */
+            const lastLetterAt = INTRO_DELAY + (chars.length - 1) * INTRO_STEP;
+
+            /* hovering fires one springy pop (grow → grooow → grow) that
+               finishes on its own while the cursor is still there. The class
+               comes off when the last "o" lands, so the gesture always plays
+               whole and a jittery pointer can't restart it midway. */
+            const extraOs = chars.filter((c) => c.classList.contains("o-x"));
+            let growing = false;
+            let popFallback;
+
+            const endPop = () => {
+               clearTimeout(popFallback);
+               title.classList.remove("grown");
+               growing = false;
+            };
+
+            const startPop = () => {
+               if (growing) return;
+               growing = true;
+               title.classList.add("grown");
+               /* animationend is the real signal; this timer is a backstop
+                  so a missed event can never strand the word wide open */
+               popFallback = setTimeout(endPop, 1300);
+            };
+
+            /* only a real interaction counts as a play; the unprompted one
+               below would otherwise report on every mobile page load */
+            const userPop = () => {
                trackOnce("hero-play");
-               for (let i = 0; i < chars.length; i++) {
-                  const r = chars[i].getBoundingClientRect();
-                  const d = Math.hypot(
-                     e.clientX - (r.left + r.width / 2),
-                     e.clientY - (r.top + r.height / 2)
-                  );
-                  targets[i] = inGrow[i]
-                     ? 800
-                     : 800 - 600 * Math.max(0, 1 - d / 220);
-               }
-            });
+               startPop();
+            };
 
-            title.addEventListener("pointerleave", () => {
-               targets = chars.map(() => 800);
-            });
+            title.addEventListener("pointerenter", userPop);
+            /* tap is the touch equivalent of hover, and lets anyone who
+               missed the one unprompted play replay it at will */
+            title.addEventListener("click", userPop);
+
+            extraOs[extraOs.length - 1].addEventListener("animationend", endPop);
+
+            /* Touch devices never fire pointerenter, so the pop would sit
+               there unreachable. Hand off directly from the load-in: the
+               last letter finishes settling and the word stretches out of
+               that same motion, so it reads as one gesture rather than two.
+               Reduced-motion users never reach this code, which is the
+               point. */
+            if (matchMedia("(hover: none)").matches) {
+               setTimeout(startPop, lastLetterAt);
+            }
 
             /* ---- magnetic buttons ---- */
 
