@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>navigation lab · prototypes</title>
+      <meta name="robots" content="noindex, nofollow" />
+      <link rel="icon" type="image/png" href="../assets/favicon.png" />
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+      <link
+         href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap"
+         rel="stylesheet"
+      />
+      <style>
+         :root {
+            --bg: #0e0e0e;
+            --text: #f5f5f5;
+            --muted: #9a9a9a;
+            --dim: #6a6a6a;
+            --line: rgba(245, 245, 245, 0.12);
+            --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+         }
+         * { box-sizing: border-box; margin: 0; padding: 0; }
+         body {
+            font-family: "Inter", system-ui, -apple-system, sans-serif;
+            background: var(--bg); color: var(--text);
+            -webkit-font-smoothing: antialiased;
+            min-height: 100vh;
+            display: flex; align-items: center; justify-content: center;
+            padding: 6vh 2rem;
+         }
+         .wrap { width: 100%; max-width: 820px; }
+         .banner {
+            display: flex; align-items: center; gap: 0.85rem;
+            border: 1px solid rgba(127, 224, 168, 0.3);
+            border-radius: 7px; overflow: hidden;
+            background: rgba(127, 224, 168, 0.06);
+            margin-bottom: 2.6rem;
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+         }
+         .banner i {
+            align-self: stretch; width: 7px; flex: 0 0 7px;
+            background: repeating-linear-gradient(
+               -45deg, #7fe0a8 0 6px, transparent 6px 12px);
+            opacity: 0.85;
+         }
+         .banner span {
+            padding: 0.7rem 0.9rem 0.7rem 0;
+            font-size: 0.72rem; letter-spacing: 0.06em; line-height: 1.6; color: #9fd8ba;
+         }
+         .banner b { color: #bff3d6; font-weight: 700; letter-spacing: 0.14em;
+                     text-transform: uppercase; }
+         .small { font-size: 0.7rem; letter-spacing: 0.18em; text-transform: uppercase;
+                  color: var(--dim); font-weight: 600; }
+         h1 { font-size: clamp(1.9rem, 4vw, 2.9rem); font-weight: 800;
+              letter-spacing: -0.035em; line-height: 1.05; margin-top: 1rem; }
+         .lede { font-size: 0.98rem; font-weight: 300; color: var(--muted);
+                 line-height: 1.6; max-width: 56ch; margin-top: 1.2rem; }
+         .lede b { color: var(--text); font-weight: 500; }
+
+         .list { margin-top: 3.5rem; border-top: 1px solid var(--line); }
+         .item {
+            display: grid;
+            grid-template-columns: 2.6rem 1fr auto;
+            align-items: baseline;
+            gap: 1.6rem;
+            padding: 1.6rem 0.9rem 1.6rem 0.6rem;
+            border-bottom: 1px solid var(--line);
+            text-decoration: none; color: inherit;
+            position: relative;
+            transition: padding-left 0.4s var(--ease-out);
+         }
+         /* the fill sits behind the row and wipes in from the left — the only
+            motion on the page, so it doesn't have to compete with anything */
+         .item::before {
+            content: ""; position: absolute; inset: 0;
+            background: rgba(245, 245, 245, 0.045);
+            transform: scaleX(0); transform-origin: left;
+            transition: transform 0.5s var(--ease-out);
+         }
+         .item:hover::before, .item:focus-visible::before { transform: scaleX(1); }
+         .item:hover, .item:focus-visible { padding-left: 1.3rem; outline: none; }
+         .item > * { position: relative; }
+
+         .key { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em;
+                color: var(--dim); text-transform: uppercase; }
+         .item:hover .key { color: var(--text); }
+         .name { display: block; font-size: 1.22rem; font-weight: 600; letter-spacing: -0.02em; }
+         .mech { display: block; font-size: 0.86rem; font-weight: 300; color: var(--muted);
+                 line-height: 1.5; margin-top: 0.45rem; max-width: 50ch; }
+         .tags { display: flex; gap: 0.45rem; margin-top: 0.8rem; flex-wrap: wrap; }
+         .tag { font-size: 0.6rem; font-weight: 600; letter-spacing: 0.12em;
+                text-transform: uppercase; color: var(--dim);
+                border: 1px solid var(--line); border-radius: 2px; padding: 0.26rem 0.5rem; }
+         .tag[data-risk="low"]  { color: #7fb069; border-color: rgba(127, 176, 105, 0.32); }
+         .tag[data-risk="med"]  { color: #d6a75c; border-color: rgba(214, 167, 92, 0.32); }
+         .tag[data-risk="high"] { color: #cf6b5c; border-color: rgba(207, 107, 92, 0.32); }
+         .arrow { font-size: 1rem; color: var(--dim); transition: transform 0.4s var(--ease-out),
+                                                                  color 0.4s var(--ease-out); }
+         .item:hover .arrow { transform: translateX(5px); color: var(--text); }
+
+         .foot { margin-top: 2.6rem; font-size: 0.78rem; font-weight: 300;
+                 color: var(--dim); line-height: 1.7; }
+         .foot em { color: var(--muted); font-style: italic; }
+         .foot code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+                      font-size: 0.72rem; color: var(--muted);
+                      border: 1px solid var(--line); border-radius: 2px; padding: 0.1rem 0.34rem; }
+         .foot a { color: var(--muted); }
+      </style>
+   </head>
+   <body>
+      <main class="wrap">
+         <div class="banner">
+            <i></i>
+            <span><b>prototype</b> — a playground for picking a navigation model.
+            Not the site, not final design. The green panel inside each variant is
+            scaffolding and gets deleted when you choose.</span>
+         </div>
+
+         <div class="small">navigation lab</div>
+         <h1>five ways to move<br />through the same site</h1>
+         <p class="lede">
+            Same four sections, same content, same dark skin — the only variable is
+            how you get from one to the next. <b>Nothing here scrolls.</b> Every
+            candidate answers to the same inputs: wheel, <b>↑ ↓</b>, <b>1–4</b>,
+            and the rail. Pick the one that feels right and we build that one properly.
+         </p>
+
+         <nav class="list">
+            <a class="item" href="a-bezel.html" data-key="a">
+               <span class="key">A</span>
+               <span>
+                  <span class="name">The Bezel</span>
+                  <span class="mech">
+                     A 2px inset frame holds the viewport like a piece of hardware.
+                     Sections are channels: the frame never moves, the content inside
+                     dissolves, the OSD ticks over.
+                  </span>
+                  <span class="tags">
+                     <span class="tag" data-risk="low">mobile: low risk</span>
+                     <span class="tag">reads as: appliance</span>
+                     <span class="tag">safest to ship</span>
+                  </span>
+               </span>
+               <span class="arrow">→</span>
+            </a>
+
+            <a class="item" href="b-zoom.html" data-key="b">
+               <span class="key">B</span>
+               <span>
+                  <span class="name">Deep Zoom</span>
+                  <span class="mech">
+                     One infinite plane, sections placed on it, and the camera flies
+                     between them. Hit <b>esc</b> for the map. The site becomes a
+                     place you can learn rather than a list you get through.
+                  </span>
+                  <span class="tags">
+                     <span class="tag" data-risk="med">mobile: needs pinch</span>
+                     <span class="tag">reads as: craft</span>
+                     <span class="tag">highest ceiling</span>
+                  </span>
+               </span>
+               <span class="arrow">→</span>
+            </a>
+
+            <a class="item" href="c-deck.html" data-key="c">
+               <span class="key">C</span>
+               <span>
+                  <span class="name">The Deck</span>
+                  <span class="mech">
+                     Sections are physical cards in a stack with real perspective.
+                     Moving forward sends the current card past the camera and pulls
+                     the next one up into its place.
+                  </span>
+                  <span class="tags">
+                     <span class="tag" data-risk="low">mobile: low risk</span>
+                     <span class="tag">reads as: tactile</span>
+                     <span class="tag">most familiar</span>
+                  </span>
+               </span>
+               <span class="arrow">→</span>
+            </a>
+
+            <a class="item" href="d-splitflap.html" data-key="d">
+               <span class="key">D</span>
+               <span>
+                  <span class="name">Split-Flap</span>
+                  <span class="mech">
+                     A mechanical departure board. The board never rebuilds — the same
+                     cells re-flip into the next section, and only the letters that
+                     actually change move. Its own type and colour, by necessity.
+                  </span>
+                  <span class="tags">
+                     <span class="tag" data-risk="high">mobile: hard</span>
+                     <span class="tag">reads as: memorable</span>
+                     <span class="tag">on-brand for air cargo</span>
+                  </span>
+               </span>
+               <span class="arrow">→</span>
+            </a>
+
+            <a class="item" href="e-aperture.html" data-key="e">
+               <span class="key">E</span>
+               <span>
+                  <span class="name">Aperture</span>
+                  <span class="mech">
+                     The whole site is on screen from the first frame. Nothing is ever
+                     hidden — the grid just opens toward the section you're in and the
+                     other three stay at the edges. <b>esc</b> opens everything.
+                  </span>
+                  <span class="tags">
+                     <span class="tag" data-risk="med">mobile: needs rethink</span>
+                     <span class="tag">reads as: designed</span>
+                     <span class="tag">no hidden content</span>
+                  </span>
+               </span>
+               <span class="arrow">→</span>
+            </a>
+         </nav>
+
+         <p class="foot">
+            Press <code>A</code>–<code>E</code> to open one. The same keys work
+            <em>inside</em> any variant, and they carry your current section across —
+            so you can sit on section 02 and flip A→B→C to compare the same content.
+            <code>H</code> hides the panel when you want a clean look.<br />
+            Deliberately excluded: the WebGL shader (unrelated to navigation, and it
+            would flatter whichever candidate happened to sit best against it), the
+            working contact form, and four of the eight sections. Those come back once
+            you've picked. The switcher lives in one file (<code>switcher.js</code>),
+            loaded by one line per variant, so it comes out cleanly. Notes on the
+            underlying APIs are in <a href="RESEARCH.md">RESEARCH.md</a>.
+         </p>
+      </main>
+
+      <script>
+         const items = [...document.querySelectorAll(".item")];
+         addEventListener("keydown", (e) => {
+            if (e.metaKey || e.ctrlKey || e.altKey) return;
+            const hit = items.find((i) => i.dataset.key === e.key.toLowerCase());
+            if (hit) { e.preventDefault(); location.href = hit.getAttribute("href"); }
+         });
+      </script>
+   </body>
+</html>

@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>lab e · aperture</title>
+      <link rel="icon" type="image/png" href="../assets/favicon.png" />
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+      <link
+         href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap"
+         rel="stylesheet"
+      />
+      <style>
+         /* ---- shared lab skin ------------------------------------------- */
+         :root {
+            --bg: #0e0e0e;
+            --text: #f5f5f5;
+            --muted: #9a9a9a;
+            --line: rgba(245, 245, 245, 0.14);
+            --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+            --aperture: cubic-bezier(0.62, 0, 0.15, 1);
+            --shut: 0.16fr;   /* how much of a closed panel stays on screen */
+         }
+         * { box-sizing: border-box; margin: 0; padding: 0; }
+         html, body { height: 100%; }
+         body {
+            font-family: "Inter", system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.1;
+            -webkit-font-smoothing: antialiased;
+            overflow: hidden;
+         }
+
+         /* ---- E: aperture -------------------------------------------------
+            the whole site is on screen from the first frame. nothing is ever
+            hidden and nothing is ever swapped — the grid itself opens toward
+            whichever section you're in, and the other three stay visible at
+            the edges so you always know what else is here */
+         .aperture {
+            position: fixed; inset: 0;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            transition: grid-template-columns 0.95s var(--aperture),
+                        grid-template-rows 0.95s var(--aperture);
+         }
+
+         .panel {
+            /* container-type is what makes this work: every bit of type inside
+               is sized in cqmin — the *smaller* axis — so content scales with its
+               own panel and no javascript touches a font size. cqw alone is
+               wrong here: a shut panel on the open column is wide but only a
+               sliver tall, and width-based type overflows it enormously */
+            container-type: size;
+            position: relative;
+            overflow: hidden;
+            border: 0.5px solid var(--line);
+            padding: 6cqmin 6cqmin;
+            display: flex; flex-direction: column; justify-content: center;
+            cursor: pointer;
+            opacity: 0.3;
+            transition: opacity 0.7s var(--ease-out);
+         }
+         .panel[data-focus] { opacity: 1; cursor: default; }
+         body[data-overview] .panel { opacity: 0.72; cursor: pointer; }
+         body[data-overview] .panel:hover { opacity: 1; }
+
+         .panel-no {
+            position: absolute; top: 3cqmin; left: 3.4cqmin;
+            font-size: 1.9cqmin; font-weight: 700; letter-spacing: 0.18em;
+            color: var(--muted); font-variant-numeric: tabular-nums;
+         }
+         .panel-label {
+            position: absolute; bottom: 3cqmin; left: 3.4cqmin;
+            font-size: 1.7cqmin; font-weight: 600; letter-spacing: 0.2em;
+            text-transform: uppercase; color: var(--muted);
+            opacity: 0; transition: opacity 0.5s var(--ease-out);
+         }
+         body[data-overview] .panel-label { opacity: 0.9; }
+
+         h1 { font-size: 9.2cqmin; font-weight: 800; letter-spacing: -0.045em; line-height: 0.98; }
+         h2 { font-size: 6.4cqmin; font-weight: 700; letter-spacing: -0.03em; line-height: 1.06; }
+         p  { font-size: 2.5cqmin; font-weight: 300; color: var(--muted);
+              line-height: 1.5; max-width: 34ch; margin-top: 3cqmin; }
+         .small { font-size: 1.75cqmin; letter-spacing: 0.1em; text-transform: uppercase;
+                  color: var(--muted); font-weight: 500; }
+         .list { margin-top: 3.5cqmin; display: grid; gap: 1.5cqmin; }
+         .list div { font-size: 2.35cqmin; font-weight: 300; color: var(--muted); line-height: 1.25; }
+         .list div strong { color: var(--text); font-weight: 600; }
+         .logos { margin-top: 5cqmin; display: flex; align-items: center; gap: 4.5cqmin;
+                  flex-wrap: wrap; opacity: 0.55; }
+         .logos img { height: 2.4cqmin; width: auto; filter: grayscale(1) brightness(2.4); }
+         .logos img.tall { height: 3.1cqmin; }
+         .stacked span { display: block; font-size: 6.2cqmin; font-weight: 700;
+                         letter-spacing: -0.03em; line-height: 1.16; }
+         .stacked span + span { color: var(--muted); }
+         .cta { margin-top: 4.5cqmin; padding: 1.9cqmin 3.6cqmin;
+                border: 1px solid var(--text); border-radius: 2px; background: none;
+                color: var(--text); font: inherit; font-size: 1.9cqmin; font-weight: 500;
+                letter-spacing: 0.06em; cursor: pointer; align-self: flex-start;
+                transition: background 0.3s var(--ease-out), color 0.3s var(--ease-out); }
+         .cta:hover { background: var(--text); color: var(--bg); }
+
+         /* chrome */
+         .hud { position: fixed; z-index: 70; font-size: 0.62rem; font-weight: 600;
+                letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted);
+                mix-blend-mode: difference; }
+         .hud-hint { bottom: 22px; right: 26px; opacity: 0.55; }
+         .rail { position: fixed; bottom: 22px; left: 26px; z-index: 70; display: flex; gap: 0.85rem;
+                 mix-blend-mode: difference; }
+         .rail button { background: none; border: 0; padding: 0; cursor: pointer; font: inherit;
+                        font-size: 0.62rem; font-weight: 600; letter-spacing: 0.14em;
+                        color: var(--muted); opacity: 0.5; font-variant-numeric: tabular-nums;
+                        transition: opacity 0.3s var(--ease-out), color 0.3s var(--ease-out); }
+         .rail button:hover { opacity: 0.9; }
+         .rail button[aria-current="true"] { opacity: 1; color: var(--text); }
+         .rail button[aria-current="true"]::after {
+            content: ""; display: block; height: 1px; background: var(--text); margin-top: 5px; }
+         .backlink { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
+                     z-index: 90; font-size: 0.58rem; letter-spacing: 0.16em;
+                     text-transform: uppercase; color: var(--muted); text-decoration: none;
+                     opacity: 0.35; mix-blend-mode: difference; }
+         .backlink:hover { opacity: 1; }
+
+         @media (prefers-reduced-motion: reduce) {
+            .aperture, .panel { transition-duration: 0.01ms; }
+         }
+         .rail .step { opacity: 0.5; font-size: 0.78rem; line-height: 1; }
+         .rail .step:hover { opacity: 1; color: var(--text); }
+      </style>
+   </head>
+   <body>
+      <div class="hud hud-hint">scroll · ↑↓ · 1–4 · <b>esc</b> open all</div>
+      <nav class="rail" id="rail" aria-label="sections"></nav>
+
+      <main class="aperture" id="aperture">
+         <section class="panel">
+            <span class="panel-no">01</span><span class="panel-label">intro</span>
+            <div class="small">tomás mateo · product engineer · lisbon</div>
+            <h1 style="margin-top:2.5cqmin">I build products<br />that grow</h1>
+            <p>and teams that ship faster with ai. with clarity. with intention. with measurable impact</p>
+         </section>
+
+         <section class="panel">
+            <span class="panel-no">02</span><span class="panel-label">proof</span>
+            <h2>proof,<br />not promises</h2>
+            <div class="list">
+               <div><strong>12.5%</strong> mrr growth in 18 months at streamyard</div>
+               <div><strong>26%</strong> lift in first-time broadcaster activation</div>
+               <div><strong>300%</strong> more signups via referrals in 12 months</div>
+               <div>shipped to <strong>4m+</strong> active users at mercado libre</div>
+               <div>maintained the design system ~<strong>10k</strong> engineers built on</div>
+            </div>
+            <div class="logos">
+               <img src="../assets/logos/mercadolibre.png" alt="mercado libre" class="tall" />
+               <img src="../assets/logos/streamyard.svg" alt="streamyard" />
+               <img src="../assets/logos/cargofive.svg" alt="cargofive" />
+               <img src="../assets/logos/cargoone.svg" alt="cargo.one" />
+               <img src="../assets/logos/factory14.png" alt="factory 14" class="tall" />
+            </div>
+         </section>
+
+         <section class="panel">
+            <span class="panel-no">03</span><span class="panel-label">method</span>
+            <div class="stacked">
+               <span>build small</span>
+               <span>ship early</span>
+               <span>measure honestly</span>
+               <span>refine relentlessly</span>
+            </div>
+            <div class="small" style="margin-top:4cqmin">velocity with intention</div>
+         </section>
+
+         <section class="panel">
+            <span class="panel-no">04</span><span class="panel-label">contact</span>
+            <h2>thoughtful systems<br />strong teams<br />measurable growth</h2>
+            <button class="cta" type="button">build with me</button>
+         </section>
+      </main>
+
+      <a class="backlink" href="index.html">← lab</a>
+
+      <script>
+         /* ---- shared nav controller (identical across the lab) ---------- */
+         function labNav({ count, onChange, threshold = 40, cooldown = 620 }) {
+            let index = -1, locked = false, acc = 0, decay;
+            function go(i, opts = {}) {
+               const next = Math.max(0, Math.min(count - 1, i));
+               if (next === index && !opts.force) return;
+               const prev = index; index = next;
+               history.replaceState(null, "", "#" + (index + 1));
+               onChange(index, prev, opts);
+            }
+            function step(dir) {
+               if (locked) return;
+               const next = index + dir;
+               if (next < 0 || next > count - 1) return;
+               locked = true; go(next);
+               setTimeout(() => (locked = false), cooldown);
+            }
+            addEventListener("wheel", (e) => {
+               e.preventDefault();
+               if (locked) return;
+               acc += e.deltaY;
+               clearTimeout(decay);
+               decay = setTimeout(() => (acc = 0), 140);
+               if (Math.abs(acc) > threshold) { step(acc > 0 ? 1 : -1); acc = 0; }
+            }, { passive: false });
+            addEventListener("keydown", (e) => {
+               const k = e.key;
+               if (k === "ArrowDown" || k === "ArrowRight" || k === "j" || k === "PageDown") { e.preventDefault(); step(1); }
+               else if (k === "ArrowUp" || k === "ArrowLeft" || k === "k" || k === "PageUp") { e.preventDefault(); step(-1); }
+               else if (k === "Home") { e.preventDefault(); go(0); }
+               else if (k === "End") { e.preventDefault(); go(count - 1); }
+               else if (/^[1-9]$/.test(k) && +k <= count) { e.preventDefault(); go(+k - 1); }
+            });
+            let touchY = null;
+            addEventListener("touchstart", (e) => (touchY = e.touches[0].clientY), { passive: true });
+            addEventListener("touchend", (e) => {
+               if (touchY === null) return;
+               const dy = touchY - e.changedTouches[0].clientY;
+               if (Math.abs(dy) > 45) step(dy > 0 ? 1 : -1);
+               touchY = null;
+            }, { passive: true });
+            const start = Math.min(count, Math.max(1, parseInt(location.hash.slice(1), 10) || 1)) - 1;
+            go(start, { initial: true });
+            return { go, step, get index() { return index; } };
+         }
+
+         /* ---- candidate E wiring ---------------------------------------- */
+         const grid = document.getElementById("aperture");
+         const panels = [...grid.querySelectorAll(".panel")];
+         const rail = document.getElementById("rail");
+         const OPEN = "1fr";
+         const SHUT = getComputedStyle(document.documentElement)
+            .getPropertyValue("--shut").trim() || "0.16fr";
+         let overview = false;
+
+         panels.forEach((p, i) => {
+            p.addEventListener("click", () => {
+               if (overview) setOverview(false);
+               nav.go(i, { force: true });
+            });
+            const b = document.createElement("button");
+            b.type = "button";
+            b.textContent = String(i + 1).padStart(2, "0");
+            b.addEventListener("click", (e) => {
+               e.stopPropagation();
+               if (overview) setOverview(false);
+               nav.go(i, { force: true });
+            });
+            rail.append(b);
+         });
+         const dots = [...rail.children];
+
+         /* WCAG 2.5.7 Dragging Movements (AA) applies once a page suppresses
+            the user agent's own scrolling, so a visible prev/next pair is a
+            requirement here rather than a convenience. they live inside the
+            rail so they inherit its placement on every candidate */
+         const stepper = (glyph, dir, where) => {
+            const b = document.createElement("button");
+            b.type = "button";
+            b.className = "step";
+            b.textContent = glyph;
+            b.setAttribute("aria-label", dir < 0 ? "previous section" : "next section");
+            b.addEventListener("click", () => nav.step(dir));
+            rail[where](b);
+         };
+         stepper("\u2191", -1, "prepend");
+         stepper("\u2193", 1, "append");
+
+         /* the aperture is just two axes: which column opens and which row
+            opens. a 2x2 makes that legible; the same two lines would drive a
+            3x3 without any other change */
+         function aim(i) {
+            if (overview) {
+               grid.style.gridTemplateColumns = OPEN + " " + OPEN;
+               grid.style.gridTemplateRows = OPEN + " " + OPEN;
+               return;
+            }
+            const col = i % 2, row = (i / 2) | 0;
+            grid.style.gridTemplateColumns = col === 0 ? OPEN + " " + SHUT : SHUT + " " + OPEN;
+            grid.style.gridTemplateRows = row === 0 ? OPEN + " " + SHUT : SHUT + " " + OPEN;
+         }
+
+         function setOverview(on) {
+            overview = on;
+            document.body.toggleAttribute("data-overview", on);
+            panels.forEach((p, n) => p.toggleAttribute("data-focus", !on && n === nav.index));
+            aim(nav.index);
+         }
+
+         const nav = labNav({
+            count: panels.length,
+            cooldown: 850,
+            onChange(i) {
+               panels.forEach((p, n) => p.toggleAttribute("data-focus", !overview && n === i));
+               dots.forEach((d, n) => d.setAttribute("aria-current", String(n === i)));
+               aim(i);
+            },
+         });
+
+         addEventListener("keydown", (e) => {
+            if (e.key === "Escape" || e.key === "0") { e.preventDefault(); setOverview(!overview); }
+         });
+      </script>
+      <!-- lab chrome, not part of this candidate: delete this line to ship -->
+      <script src="switcher.js" defer></script>
+   </body>
+</html>

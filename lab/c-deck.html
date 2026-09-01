@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>lab c · the deck</title>
+      <link rel="icon" type="image/png" href="../assets/favicon.png" />
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+      <link
+         href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap"
+         rel="stylesheet"
+      />
+      <style>
+         /* ---- shared lab skin ------------------------------------------- */
+         :root {
+            --bg: #0e0e0e;
+            --surface: #161616;
+            --text: #f5f5f5;
+            --muted: #9a9a9a;
+            --line: rgba(245, 245, 245, 0.14);
+            --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+            /* slight overshoot: cards are objects with mass, and objects that
+               stop dead read as images of objects */
+            --spring: cubic-bezier(0.34, 1.36, 0.4, 1);
+         }
+         * { box-sizing: border-box; margin: 0; padding: 0; }
+         html, body { height: 100%; }
+         body {
+            font-family: "Inter", system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.1;
+            -webkit-font-smoothing: antialiased;
+            overflow: hidden;
+         }
+         .small { font-size: 0.74rem; letter-spacing: 0.08em; text-transform: uppercase;
+                  color: var(--muted); font-weight: 500; }
+         .backlink { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
+                     z-index: 90; font-size: 0.62rem; letter-spacing: 0.14em;
+                     text-transform: uppercase; color: var(--muted); text-decoration: none;
+                     opacity: 0.35; transition: opacity 0.2s; }
+         .backlink:hover { opacity: 1; }
+
+         /* ---- C: the deck ------------------------------------------------
+            sections are physical cards in a stack. moving forward doesn't swap
+            content, it moves *you* through the deck: the current card passes
+            the camera and the next one rises into its place. the whole idea
+            rests on the shadow and the perspective being right */
+         .stage {
+            position: fixed; inset: 0;
+            display: grid; place-items: center;
+            perspective: 1700px;
+            perspective-origin: 50% 42%;
+         }
+         .card {
+            position: absolute;
+            width: min(900px, 80vw);
+            height: min(580px, 72vh);
+            padding: clamp(2rem, 3.5vw, 3.4rem);
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex; flex-direction: column; justify-content: center;
+            /* the stack only reads as depth because the shadow gets softer and
+               larger the further back a card sits */
+            box-shadow: 0 calc(24px + var(--o) * 10px) calc(70px + var(--o) * 34px)
+                        rgba(0, 0, 0, calc(0.62 - var(--o) * 0.1));
+            /* 58px, not 30: at perspective 1700 a card one step back renders at
+               ~92%, so a smaller offset gets entirely eaten by the shrink and
+               the stack collapses into a single card */
+            transform: translate3d(0, calc(var(--o) * 58px), calc(var(--o) * -155px));
+            transition: transform 0.72s var(--spring),
+                        opacity 0.55s var(--ease-out),
+                        box-shadow 0.72s var(--ease-out),
+                        visibility 0s linear 0.72s;
+            will-change: transform;
+         }
+         /* the veil is what keeps five stacked cards from turning the screen
+            into visual noise — depth reads as recession, not as clutter */
+         .card::after {
+            content: ""; position: absolute; inset: 0; pointer-events: none;
+            background: var(--bg);
+            opacity: calc(var(--o) * 0.3);
+            transition: opacity 0.55s var(--ease-out);
+         }
+         .card[data-state="active"] { --o: 0; opacity: 1; visibility: visible; transition-delay: 0s; }
+         .card[data-state="behind"] { opacity: 1; visibility: visible; transition-delay: 0s; }
+         /* a card you've passed doesn't fade in place, it goes over your
+            shoulder — which is the only reason "forward" has a direction */
+         .card[data-state="past"] {
+            transform: translate3d(0, -16vh, 300px) rotateX(11deg);
+            opacity: 0; visibility: hidden;
+         }
+         .card[data-state="deep"] { opacity: 0; visibility: hidden; }
+
+         .card-index { position: absolute; top: 1.6rem; right: 1.9rem;
+                       font-size: 0.68rem; font-weight: 700; letter-spacing: 0.14em;
+                       color: var(--muted); opacity: 0.5; font-variant-numeric: tabular-nums; }
+
+         h1 { font-size: clamp(2.2rem, 4.6vw, 4rem); font-weight: 800; letter-spacing: -0.045em; line-height: 1; }
+         h2 { font-size: clamp(1.6rem, 3vw, 2.5rem); font-weight: 700; letter-spacing: -0.03em; line-height: 1.08; }
+         p  { font-size: clamp(0.95rem, 1.25vw, 1.1rem); font-weight: 300; color: var(--muted);
+              line-height: 1.55; max-width: 42ch; margin-top: 1.3rem; }
+         .list { margin-top: 1.6rem; display: grid; gap: 0.6rem; }
+         .list div { font-size: clamp(0.9rem, 1.15vw, 1.05rem); font-weight: 300; color: var(--muted); }
+         .list div strong { color: var(--text); font-weight: 600; }
+         .logos { margin-top: 2.2rem; display: flex; align-items: center; gap: 2.2rem;
+                  flex-wrap: wrap; opacity: 0.55; }
+         .logos img { height: 19px; width: auto; filter: grayscale(1) brightness(2.4); }
+         .logos img.tall { height: 25px; }
+         .stacked span { display: block; font-size: clamp(1.5rem, 3.2vw, 2.6rem);
+                         font-weight: 700; letter-spacing: -0.03em; line-height: 1.18; }
+         .stacked span + span { color: var(--muted); }
+         .cta { display: inline-block; margin-top: 2rem; padding: 0.85rem 1.7rem;
+                border: 1px solid var(--text); border-radius: 2px; background: none;
+                color: var(--text); font: inherit; font-size: 0.88rem; font-weight: 500;
+                letter-spacing: 0.04em; cursor: pointer; align-self: flex-start;
+                transition: background 0.3s var(--ease-out), color 0.3s var(--ease-out); }
+         .cta:hover { background: var(--text); color: var(--bg); }
+
+         .hud { position: fixed; z-index: 70; font-size: 0.62rem; font-weight: 600;
+                letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+         .hud-hint { bottom: 26px; right: 30px; opacity: 0.45; }
+         .hud-count { top: 26px; right: 30px; }
+         .hud-count b { color: var(--text); font-size: 0.78rem; font-variant-numeric: tabular-nums; }
+         .rail { position: fixed; bottom: 26px; left: 30px; z-index: 70; display: flex; gap: 0.85rem; }
+         .rail button { background: none; border: 0; padding: 0; cursor: pointer; font: inherit;
+                        font-size: 0.62rem; font-weight: 600; letter-spacing: 0.14em;
+                        color: var(--muted); opacity: 0.45; font-variant-numeric: tabular-nums;
+                        transition: opacity 0.3s var(--ease-out), color 0.3s var(--ease-out); }
+         .rail button:hover { opacity: 0.85; }
+         .rail button[aria-current="true"] { opacity: 1; color: var(--text); }
+         .rail button[aria-current="true"]::after {
+            content: ""; display: block; height: 1px; background: var(--text); margin-top: 5px; }
+
+         /* on load the deck is already stacked; it should not assemble itself */
+         body.booting .card { transition: none !important; }
+
+         @media (prefers-reduced-motion: reduce) {
+            .card { transition-duration: 0.01ms; }
+            .card[data-state="past"] { transform: none; }
+         }
+         .rail .step { opacity: 0.5; font-size: 0.78rem; line-height: 1; }
+         .rail .step:hover { opacity: 1; color: var(--text); }
+      </style>
+   </head>
+   <body>
+      <div class="hud hud-count" aria-hidden="true"><b id="count">01</b> / 04</div>
+      <div class="hud hud-hint">scroll · ↑↓ · 1–4</div>
+      <nav class="rail" id="rail" aria-label="sections"></nav>
+
+      <main class="stage" id="stage">
+         <section class="card">
+            <span class="card-index">01</span>
+            <div class="small">tomás mateo · product engineer · lisbon</div>
+            <h1 style="margin-top:1.3rem">I build products<br />that grow</h1>
+            <p>and teams that ship faster with ai. with clarity. with intention. with measurable impact</p>
+            <div class="small" style="margin-top:2rem">product · growth · ai · leadership</div>
+         </section>
+
+         <section class="card">
+            <span class="card-index">02</span>
+            <h2>proof, not promises</h2>
+            <div class="list">
+               <div><strong>12.5%</strong> mrr growth in 18 months at streamyard</div>
+               <div><strong>26%</strong> lift in first-time broadcaster activation</div>
+               <div><strong>300%</strong> more signups via referrals in 12 months</div>
+               <div>shipped to <strong>4m+</strong> active users at mercado libre</div>
+               <div>maintained the design system ~<strong>10k</strong> engineers built on</div>
+            </div>
+            <div class="logos">
+               <img src="../assets/logos/mercadolibre.png" alt="mercado libre" class="tall" />
+               <img src="../assets/logos/streamyard.svg" alt="streamyard" />
+               <img src="../assets/logos/cargofive.svg" alt="cargofive" />
+               <img src="../assets/logos/cargoone.svg" alt="cargo.one" />
+               <img src="../assets/logos/factory14.png" alt="factory 14" class="tall" />
+            </div>
+         </section>
+
+         <section class="card">
+            <span class="card-index">03</span>
+            <div class="stacked">
+               <span>build small</span>
+               <span>ship early</span>
+               <span>measure honestly</span>
+               <span>refine relentlessly</span>
+            </div>
+            <div class="small" style="margin-top:2rem">velocity with intention</div>
+         </section>
+
+         <section class="card">
+            <span class="card-index">04</span>
+            <h2>thoughtful systems<br />strong teams<br />measurable growth</h2>
+            <button class="cta" type="button">build with me</button>
+         </section>
+      </main>
+
+      <a class="backlink" href="index.html">← lab</a>
+
+      <script>
+         /* ---- shared nav controller (identical across the lab) ---------- */
+         function labNav({ count, onChange, threshold = 40, cooldown = 620 }) {
+            let index = -1, locked = false, acc = 0, decay;
+            function go(i, opts = {}) {
+               const next = Math.max(0, Math.min(count - 1, i));
+               if (next === index && !opts.force) return;
+               const prev = index; index = next;
+               history.replaceState(null, "", "#" + (index + 1));
+               onChange(index, prev, opts);
+            }
+            function step(dir) {
+               if (locked) return;
+               const next = index + dir;
+               if (next < 0 || next > count - 1) return;
+               locked = true; go(next);
+               setTimeout(() => (locked = false), cooldown);
+            }
+            addEventListener("wheel", (e) => {
+               e.preventDefault();
+               if (locked) return;
+               acc += e.deltaY;
+               clearTimeout(decay);
+               decay = setTimeout(() => (acc = 0), 140);
+               if (Math.abs(acc) > threshold) { step(acc > 0 ? 1 : -1); acc = 0; }
+            }, { passive: false });
+            addEventListener("keydown", (e) => {
+               const k = e.key;
+               if (k === "ArrowDown" || k === "ArrowRight" || k === "j" || k === "PageDown") { e.preventDefault(); step(1); }
+               else if (k === "ArrowUp" || k === "ArrowLeft" || k === "k" || k === "PageUp") { e.preventDefault(); step(-1); }
+               else if (k === "Home") { e.preventDefault(); go(0); }
+               else if (k === "End") { e.preventDefault(); go(count - 1); }
+               else if (/^[1-9]$/.test(k) && +k <= count) { e.preventDefault(); go(+k - 1); }
+            });
+            let touchY = null;
+            addEventListener("touchstart", (e) => (touchY = e.touches[0].clientY), { passive: true });
+            addEventListener("touchend", (e) => {
+               if (touchY === null) return;
+               const dy = touchY - e.changedTouches[0].clientY;
+               if (Math.abs(dy) > 45) step(dy > 0 ? 1 : -1);
+               touchY = null;
+            }, { passive: true });
+            const start = Math.min(count, Math.max(1, parseInt(location.hash.slice(1), 10) || 1)) - 1;
+            go(start, { initial: true });
+            return { go, step, get index() { return index; } };
+         }
+
+         /* ---- candidate C wiring ---------------------------------------- */
+         const cards = [...document.querySelectorAll(".card")];
+         const rail = document.getElementById("rail");
+         const count = document.getElementById("count");
+
+         cards.forEach((c, i) => {
+            const b = document.createElement("button");
+            b.type = "button";
+            b.textContent = String(i + 1).padStart(2, "0");
+            b.addEventListener("click", () => nav.go(i));
+            rail.append(b);
+         });
+         const dots = [...rail.children];
+
+         /* WCAG 2.5.7 Dragging Movements (AA) applies once a page suppresses
+            the user agent's own scrolling, so a visible prev/next pair is a
+            requirement here rather than a convenience. they live inside the
+            rail so they inherit its placement on every candidate */
+         const stepper = (glyph, dir, where) => {
+            const b = document.createElement("button");
+            b.type = "button";
+            b.className = "step";
+            b.textContent = glyph;
+            b.setAttribute("aria-label", dir < 0 ? "previous section" : "next section");
+            b.addEventListener("click", () => nav.step(dir));
+            rail[where](b);
+         };
+         stepper("\u2191", -1, "prepend");
+         stepper("\u2193", 1, "append");
+
+         /* z-order has to be rewritten every move: without it a card that just
+            went past the camera renders behind the stack it's supposed to be
+            in front of */
+         const DEPTH = 3;
+         /* suppress the opening animation the same way B does: on load the
+            deck should already be stacked, not assembling itself */
+         document.body.classList.add("booting");
+         const nav = labNav({
+            count: cards.length,
+            cooldown: 700,
+            onChange(i) {
+               cards.forEach((c, n) => {
+                  const o = n - i;
+                  c.style.setProperty("--o", Math.max(0, o));
+                  c.style.zIndex = String(100 - Math.abs(o) + (o < 0 ? -50 : 0));
+                  c.dataset.state =
+                     o === 0 ? "active" : o < 0 ? "past" : o <= DEPTH ? "behind" : "deep";
+                  c.inert = o !== 0;
+               });
+               dots.forEach((d, n) => d.setAttribute("aria-current", String(n === i)));
+               count.textContent = String(i + 1).padStart(2, "0");
+            },
+         });
+         requestAnimationFrame(() => requestAnimationFrame(() =>
+            document.body.classList.remove("booting")));
+      </script>
+      <!-- lab chrome, not part of this candidate: delete this line to ship -->
+      <script src="switcher.js" defer></script>
+   </body>
+</html>

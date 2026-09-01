@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>lab b · deep zoom</title>
+      <link rel="icon" type="image/png" href="../assets/favicon.png" />
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+      <link
+         href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap"
+         rel="stylesheet"
+      />
+      <style>
+         /* ---- shared lab skin ------------------------------------------- */
+         :root {
+            --bg: #0e0e0e;
+            --text: #f5f5f5;
+            --muted: #9a9a9a;
+            --line: rgba(245, 245, 245, 0.14);
+            --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+            /* the camera move is longer than a normal ui transition on purpose:
+               travel is the point, and a fast zoom just reads as a cut */
+            --camera: cubic-bezier(0.72, 0, 0.18, 1);
+         }
+         * { box-sizing: border-box; margin: 0; padding: 0; }
+         html, body { height: 100%; }
+         body {
+            font-family: "Inter", system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.1;
+            -webkit-font-smoothing: antialiased;
+            overflow: hidden;
+         }
+         .small { font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase;
+                  color: var(--muted); font-weight: 500; }
+         .cta { display: inline-block; margin-top: 2.5rem; padding: 0.9rem 1.8rem;
+                border: 1px solid var(--text); border-radius: 2px; background: none;
+                color: var(--text); font: inherit; font-size: 0.9rem; font-weight: 500;
+                letter-spacing: 0.04em; cursor: pointer; }
+         .backlink { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
+                     z-index: 90; font-size: 0.62rem; letter-spacing: 0.14em;
+                     text-transform: uppercase; color: var(--muted); text-decoration: none;
+                     opacity: 0.35; transition: opacity 0.2s; }
+         .backlink:hover { opacity: 1; }
+
+         /* ---- B: deep zoom ----------------------------------------------
+            there is exactly one moving element on this page. every section
+            sits at a fixed spot on an infinite plane and navigation moves the
+            *camera*, not the content — so the site has a geography you can
+            learn, and going back somewhere feels like returning to a place */
+         .viewport { position: fixed; inset: 0; overflow: hidden; }
+         .plane {
+            position: absolute; top: 0; left: 0;
+            transform-origin: 0 0;
+            will-change: transform;
+            transition: transform 1.05s var(--camera);
+         }
+         .node {
+            position: absolute;
+            width: 760px;
+            padding: 2.5rem;
+            opacity: 0.22;
+            filter: blur(1.5px);
+            transition: opacity 0.7s var(--ease-out), filter 0.7s var(--ease-out);
+         }
+         .node[data-focus] { opacity: 1; filter: none; }
+         /* in overview nothing is focused, so everything comes up to a legible
+            middle state and the whole map becomes the interface */
+         body[data-overview] .node { opacity: 0.62; filter: none; cursor: pointer; }
+         body[data-overview] .node:hover { opacity: 1; }
+         body[data-overview] .node::after {
+            content: ""; position: absolute; inset: -1.5rem;
+            border: 1px solid var(--line); border-radius: 6px;
+         }
+
+         /* fixed px type: the plane has its own coordinate system and viewport
+            units inside it would fight the camera */
+         .node h1 { font-size: 4.6rem; font-weight: 800; letter-spacing: -0.045em; line-height: 0.98; }
+         .node h2 { font-size: 2.6rem; font-weight: 700; letter-spacing: -0.03em; line-height: 1.05; }
+         .node p  { font-size: 1.15rem; font-weight: 300; color: var(--muted);
+                    line-height: 1.55; max-width: 40ch; margin-top: 1.5rem; }
+         .list { margin-top: 2rem; display: grid; gap: 0.7rem; }
+         .list div { font-size: 1.1rem; font-weight: 300; color: var(--muted); }
+         .list div strong { color: var(--text); font-weight: 600; }
+         /* the node is a fixed 760 plane units wide, so the gap is tuned to keep
+            all five marks on one line rather than orphaning the last one */
+         .logos { margin-top: 2.5rem; display: flex; align-items: center; gap: 1.5rem;
+                  flex-wrap: wrap; opacity: 0.55; }
+         .logos img { height: 20px; width: auto; filter: grayscale(1) brightness(2.4); }
+         .logos img.tall { height: 26px; }
+         .stacked span { display: block; font-size: 2.9rem; font-weight: 700;
+                         letter-spacing: -0.03em; line-height: 1.15; }
+         .stacked span + span { color: var(--muted); }
+
+         /* chrome */
+         .hud { position: fixed; z-index: 70; font-size: 0.62rem; font-weight: 600;
+                letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+         .hud-hint { bottom: 26px; right: 30px; opacity: 0.45; }
+         /* the minimap is the honest version of a nav bar: it shows you where
+            you are in a space rather than how far down a list you got */
+         .minimap { position: fixed; top: 26px; right: 30px; z-index: 70;
+                    width: 96px; height: 78px; border: 1px solid var(--line); border-radius: 3px; }
+         .minimap i { position: absolute; display: block; background: var(--muted);
+                      opacity: 0.4; border-radius: 1px;
+                      transition: opacity 0.4s var(--ease-out), background 0.4s var(--ease-out); }
+         .minimap i.on { background: var(--text); opacity: 1; }
+         .rail { position: fixed; bottom: 26px; left: 30px; z-index: 70; display: flex; gap: 0.85rem; }
+         .rail button { background: none; border: 0; padding: 0; cursor: pointer; font: inherit;
+                        font-size: 0.62rem; font-weight: 600; letter-spacing: 0.14em;
+                        color: var(--muted); opacity: 0.45; font-variant-numeric: tabular-nums;
+                        transition: opacity 0.3s var(--ease-out), color 0.3s var(--ease-out); }
+         .rail button:hover { opacity: 0.85; }
+         .rail button[aria-current="true"] { opacity: 1; color: var(--text); }
+         .rail button[aria-current="true"]::after {
+            content: ""; display: block; height: 1px; background: var(--text); margin-top: 5px; }
+
+         @media (prefers-reduced-motion: reduce) {
+            .plane { transition-duration: 0.01ms; }
+            .node { transition-duration: 0.01ms; }
+         }
+         .rail .step { opacity: 0.5; font-size: 0.78rem; line-height: 1; }
+         .rail .step:hover { opacity: 1; color: var(--text); }
+      </style>
+   </head>
+   <body>
+      <div class="hud hud-hint">scroll · ↑↓ · 1–4 · <b>esc</b> map</div>
+      <div class="minimap" id="minimap" aria-hidden="true"></div>
+      <nav class="rail" id="rail" aria-label="sections"></nav>
+
+      <div class="viewport">
+         <div class="plane" id="plane">
+            <!-- x/y are plane coordinates. the layout is deliberately not a
+                 grid: an irregular arrangement is what makes the map memorable -->
+            <section class="node" style="left:0px;   top:0px">
+               <div class="small">tomás mateo · product engineer · lisbon</div>
+               <h1 style="margin-top:1.5rem">I build products<br />that grow</h1>
+               <p>and teams that ship faster with ai. with clarity. with intention. with measurable impact</p>
+               <div class="small" style="margin-top:2.5rem">product · growth · ai · leadership</div>
+            </section>
+
+            <!-- widest node on the plane: it has to hold five logo marks on one line -->
+            <section class="node" style="left:1240px; top:420px; width:940px">
+               <h2>proof, not promises</h2>
+               <div class="list">
+                  <div><strong>12.5%</strong> mrr growth in 18 months at streamyard</div>
+                  <div><strong>26%</strong> lift in first-time broadcaster activation</div>
+                  <div><strong>300%</strong> more signups via referrals in 12 months</div>
+                  <div>shipped to <strong>4m+</strong> active users at mercado libre</div>
+                  <div>maintained the design system ~<strong>10k</strong> engineers built on</div>
+               </div>
+               <div class="logos">
+                  <img src="../assets/logos/mercadolibre.png" alt="mercado libre" class="tall" />
+                  <img src="../assets/logos/streamyard.svg" alt="streamyard" />
+                  <img src="../assets/logos/cargofive.svg" alt="cargofive" />
+                  <img src="../assets/logos/cargoone.svg" alt="cargo.one" />
+                  <img src="../assets/logos/factory14.png" alt="factory 14" class="tall" />
+               </div>
+            </section>
+
+            <section class="node" style="left:180px;  top:1120px">
+               <div class="stacked">
+                  <span>build small</span>
+                  <span>ship early</span>
+                  <span>measure honestly</span>
+                  <span>refine relentlessly</span>
+               </div>
+               <div class="small" style="margin-top:2.5rem">velocity with intention</div>
+            </section>
+
+            <section class="node" style="left:1420px; top:1440px">
+               <h2>thoughtful systems<br />strong teams<br />measurable growth</h2>
+               <button class="cta" type="button">build with me</button>
+            </section>
+         </div>
+      </div>
+
+      <a class="backlink" href="index.html">← lab</a>
+
+      <script>
+         /* ---- shared nav controller (identical across the lab) ---------- */
+         function labNav({ count, onChange, threshold = 40, cooldown = 620 }) {
+            let index = -1, locked = false, acc = 0, decay;
+            function go(i, opts = {}) {
+               const next = Math.max(0, Math.min(count - 1, i));
+               if (next === index && !opts.force) return;
+               const prev = index; index = next;
+               history.replaceState(null, "", "#" + (index + 1));
+               onChange(index, prev, opts);
+            }
+            function step(dir) {
+               if (locked) return;
+               const next = index + dir;
+               if (next < 0 || next > count - 1) return;
+               locked = true; go(next);
+               setTimeout(() => (locked = false), cooldown);
+            }
+            addEventListener("wheel", (e) => {
+               e.preventDefault();
+               if (locked) return;
+               acc += e.deltaY;
+               clearTimeout(decay);
+               decay = setTimeout(() => (acc = 0), 140);
+               if (Math.abs(acc) > threshold) { step(acc > 0 ? 1 : -1); acc = 0; }
+            }, { passive: false });
+            addEventListener("keydown", (e) => {
+               const k = e.key;
+               if (k === "ArrowDown" || k === "ArrowRight" || k === "j" || k === "PageDown") { e.preventDefault(); step(1); }
+               else if (k === "ArrowUp" || k === "ArrowLeft" || k === "k" || k === "PageUp") { e.preventDefault(); step(-1); }
+               else if (k === "Home") { e.preventDefault(); go(0); }
+               else if (k === "End") { e.preventDefault(); go(count - 1); }
+               else if (/^[1-9]$/.test(k) && +k <= count) { e.preventDefault(); go(+k - 1); }
+            });
+            let touchY = null;
+            addEventListener("touchstart", (e) => (touchY = e.touches[0].clientY), { passive: true });
+            addEventListener("touchend", (e) => {
+               if (touchY === null) return;
+               const dy = touchY - e.changedTouches[0].clientY;
+               if (Math.abs(dy) > 45) step(dy > 0 ? 1 : -1);
+               touchY = null;
+            }, { passive: true });
+            const start = Math.min(count, Math.max(1, parseInt(location.hash.slice(1), 10) || 1)) - 1;
+            go(start, { initial: true });
+            return { go, step, get index() { return index; } };
+         }
+
+         /* ---- candidate B: the camera ----------------------------------- */
+         const plane = document.getElementById("plane");
+         const nodes = [...plane.querySelectorAll(".node")];
+         const rail = document.getElementById("rail");
+         const minimap = document.getElementById("minimap");
+         let overview = false;
+
+         /* measured from layout, not hardcoded: transforms don't affect offset*
+            so the plane's untransformed geometry is always readable */
+         const boxes = () =>
+            nodes.map((n) => ({
+               x: n.offsetLeft, y: n.offsetTop, w: n.offsetWidth, h: n.offsetHeight,
+               cx: n.offsetLeft + n.offsetWidth / 2, cy: n.offsetTop + n.offsetHeight / 2,
+            }));
+
+         function camera(cx, cy, s) {
+            const vw = innerWidth, vh = innerHeight;
+            plane.style.transform =
+               `translate(${vw / 2}px, ${vh / 2}px) scale(${s}) translate(${-cx}px, ${-cy}px)`;
+         }
+
+         function focus(i) {
+            const b = boxes()[i];
+            /* clamp to 1 so focused type renders at its true pixel size —
+               a focused section should never be a scaled bitmap */
+            const s = Math.min(1, (innerWidth * 0.82) / b.w, (innerHeight * 0.82) / b.h);
+            camera(b.cx, b.cy, s);
+         }
+
+         function showOverview() {
+            const bs = boxes();
+            const x0 = Math.min(...bs.map((b) => b.x)), y0 = Math.min(...bs.map((b) => b.y));
+            const x1 = Math.max(...bs.map((b) => b.x + b.w)), y1 = Math.max(...bs.map((b) => b.y + b.h));
+            const pad = 180;
+            const s = Math.min(innerWidth / (x1 - x0 + pad), innerHeight / (y1 - y0 + pad));
+            camera((x0 + x1) / 2, (y0 + y1) / 2, s);
+         }
+
+         function setOverview(on) {
+            overview = on;
+            document.body.toggleAttribute("data-overview", on);
+            on ? showOverview() : focus(nav.index);
+         }
+
+         /* minimap mirrors the real plane geometry rather than being drawn by
+            hand, so it can never drift out of sync with the layout */
+         function buildMinimap() {
+            minimap.innerHTML = "";
+            const bs = boxes();
+            const x0 = Math.min(...bs.map((b) => b.x)), y0 = Math.min(...bs.map((b) => b.y));
+            const x1 = Math.max(...bs.map((b) => b.x + b.w)), y1 = Math.max(...bs.map((b) => b.y + b.h));
+            const W = x1 - x0, H = y1 - y0;
+            bs.forEach(() => minimap.append(document.createElement("i")));
+            [...minimap.children].forEach((el, i) => {
+               const b = bs[i];
+               el.style.left = ((b.x - x0) / W) * 88 + 4 + "px";
+               el.style.top = ((b.y - y0) / H) * 70 + 4 + "px";
+               el.style.width = Math.max(4, (b.w / W) * 88) + "px";
+               el.style.height = Math.max(3, (b.h / H) * 70) + "px";
+            });
+         }
+
+         nodes.forEach((n, i) => {
+            n.addEventListener("click", () => { if (overview) { setOverview(false); nav.go(i, { force: true }); } });
+            const b = document.createElement("button");
+            b.type = "button";
+            b.textContent = String(i + 1).padStart(2, "0");
+            b.addEventListener("click", () => { if (overview) setOverview(false); nav.go(i, { force: true }); });
+            rail.append(b);
+         });
+         const dots = [...rail.children];
+
+         /* WCAG 2.5.7 Dragging Movements (AA) applies once a page suppresses
+            the user agent's own scrolling, so a visible prev/next pair is a
+            requirement here rather than a convenience. they live inside the
+            rail so they inherit its placement on every candidate */
+         const stepper = (glyph, dir, where) => {
+            const b = document.createElement("button");
+            b.type = "button";
+            b.className = "step";
+            b.textContent = glyph;
+            b.setAttribute("aria-label", dir < 0 ? "previous section" : "next section");
+            b.addEventListener("click", () => nav.step(dir));
+            rail[where](b);
+         };
+         stepper("\u2191", -1, "prepend");
+         stepper("\u2193", 1, "append");
+
+         const nav = labNav({
+            count: nodes.length,
+            cooldown: 900,
+            onChange(i) {
+               nodes.forEach((n, x) => n.toggleAttribute("data-focus", x === i));
+               dots.forEach((d, x) => d.setAttribute("aria-current", String(x === i)));
+               [...minimap.children].forEach((m, x) => m.classList.toggle("on", x === i));
+               if (!overview) focus(i);
+            },
+         });
+
+         addEventListener("keydown", (e) => {
+            if (e.key === "Escape" || e.key === "0") { e.preventDefault(); setOverview(!overview); }
+         });
+
+         /* the very first camera solve must not animate: without this the page
+            opens by flying in from the plane's origin, which looks like a bug */
+         plane.style.transition = "none";
+         buildMinimap();
+         [...minimap.children].forEach((m, x) => m.classList.toggle("on", x === nav.index));
+         focus(nav.index);
+         requestAnimationFrame(() => requestAnimationFrame(() => (plane.style.transition = "")));
+         addEventListener("resize", () => { buildMinimap(); overview ? showOverview() : focus(nav.index); });
+
+         /* fonts land after first paint and change measured heights, so the
+            camera is re-solved once the real metrics exist */
+         if (document.fonts) document.fonts.ready.then(() => {
+            buildMinimap();
+            [...minimap.children].forEach((m, x) => m.classList.toggle("on", x === nav.index));
+            overview ? showOverview() : focus(nav.index);
+         });
+      </script>
+      <!-- lab chrome, not part of this candidate: delete this line to ship -->
+      <script src="switcher.js" defer></script>
+   </body>
+</html>

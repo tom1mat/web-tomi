@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>lab a · the bezel</title>
+      <link rel="icon" type="image/png" href="../assets/favicon.png" />
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+      <link
+         href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap"
+         rel="stylesheet"
+      />
+      <style>
+         /* ---- shared lab skin ------------------------------------------- */
+         :root {
+            --bg: #0e0e0e;
+            --text: #f5f5f5;
+            --muted: #9a9a9a;
+            --line: rgba(245, 245, 245, 0.14);
+            --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+         }
+         * { box-sizing: border-box; margin: 0; padding: 0; }
+         html, body { height: 100%; }
+         body {
+            font-family: "Inter", system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.1;
+            -webkit-font-smoothing: antialiased;
+            overflow: hidden;
+         }
+         h1 { font-size: clamp(2.5rem, 6vw, 5rem); font-weight: 800; letter-spacing: -0.04em; }
+         h2 { font-size: clamp(1.8rem, 3.6vw, 3rem); font-weight: 700; letter-spacing: -0.03em; }
+         p  { font-size: clamp(1rem, 1.5vw, 1.25rem); font-weight: 300; color: var(--muted);
+              line-height: 1.5; max-width: 44ch; margin-top: 1.5rem; }
+         .small { font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase;
+                  color: var(--muted); font-weight: 500; }
+         .list { margin-top: 2rem; display: grid; gap: 0.7rem; }
+         .list div { font-size: clamp(0.95rem, 1.4vw, 1.15rem); font-weight: 300; color: var(--muted); }
+         .list div strong { color: var(--text); font-weight: 600; }
+         .logos { margin-top: 3rem; display: flex; align-items: center; gap: 2.5rem;
+                  flex-wrap: wrap; opacity: 0.55; }
+         .logos img { height: 20px; width: auto; filter: grayscale(1) brightness(2.4); }
+         .logos img.tall { height: 26px; }
+         .stacked span { display: block; font-size: clamp(1.6rem, 4vw, 3.2rem);
+                         font-weight: 700; letter-spacing: -0.03em; line-height: 1.15; }
+         .stacked span + span { color: var(--muted); }
+         .cta { display: inline-block; margin-top: 2.5rem; padding: 0.9rem 1.8rem;
+                border: 1px solid var(--text); border-radius: 2px; background: none;
+                color: var(--text); font: inherit; font-size: 0.9rem; font-weight: 500;
+                letter-spacing: 0.04em; cursor: pointer;
+                transition: background 0.3s var(--ease-out), color 0.3s var(--ease-out); }
+         .cta:hover { background: var(--text); color: var(--bg); }
+         .backlink { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
+                     z-index: 90; font-size: 0.62rem; letter-spacing: 0.14em;
+                     text-transform: uppercase; color: var(--muted); text-decoration: none;
+                     opacity: 0.35; transition: opacity 0.2s; }
+         .backlink:hover { opacity: 1; }
+
+         /* ---- A: the bezel ---------------------------------------------- */
+         /* the frame is the product. it never moves, never scrolls, and every
+            piece of chrome hangs off it so the viewport reads as a device
+            rather than a document */
+         .bezel {
+            position: fixed;
+            inset: 14px;
+            border: 2px solid var(--line);
+            border-radius: 3px;
+            pointer-events: none;
+            z-index: 60;
+         }
+         /* corner ticks sell "instrument" more than the border alone does */
+         .bezel::before, .bezel::after {
+            content: ""; position: absolute; width: 9px; height: 9px;
+            border: 2px solid var(--text); opacity: 0.5;
+         }
+         .bezel::before { top: -2px; left: -2px; border-right: 0; border-bottom: 0; }
+         .bezel::after  { bottom: -2px; right: -2px; border-left: 0; border-top: 0; }
+
+         /* on-screen display, positioned against the frame */
+         .osd {
+            position: fixed; z-index: 70; font-size: 0.62rem; font-weight: 600;
+            letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted);
+         }
+         .osd-ch { top: 30px; right: 34px; display: flex; gap: 0.5rem; align-items: baseline; }
+         .osd-ch b { color: var(--text); font-size: 0.78rem; font-weight: 700;
+                     letter-spacing: 0.1em; font-variant-numeric: tabular-nums; }
+         .osd-hint { bottom: 30px; right: 34px; opacity: 0.4; }
+
+         /* channel rail */
+         .rail { position: fixed; bottom: 28px; left: 34px; z-index: 70;
+                 display: flex; gap: 0.85rem; }
+         .rail button {
+            background: none; border: 0; padding: 0; cursor: pointer;
+            font: inherit; font-size: 0.62rem; font-weight: 600; letter-spacing: 0.14em;
+            color: var(--muted); opacity: 0.45; font-variant-numeric: tabular-nums;
+            transition: opacity 0.3s var(--ease-out), color 0.3s var(--ease-out);
+         }
+         .rail button:hover { opacity: 0.85; }
+         .rail button[aria-current="true"] { opacity: 1; color: var(--text); }
+         .rail button[aria-current="true"]::after {
+            content: ""; display: block; height: 1px; background: var(--text); margin-top: 5px;
+         }
+
+         /* the screen: one fixed viewport, panes stacked inside it */
+         .screen { position: fixed; inset: 14px; overflow: hidden; }
+         .pane {
+            position: absolute; inset: 0;
+            display: flex; flex-direction: column; justify-content: center;
+            padding: 0 clamp(2.5rem, 8vw, 7rem);
+            opacity: 0; visibility: hidden;
+            transform: translateY(14px);
+            transition: opacity 0.34s var(--ease-out),
+                        transform 0.55s var(--ease-out),
+                        visibility 0s linear 0.34s;
+         }
+         .pane[data-active] {
+            opacity: 1; visibility: visible; transform: none;
+            transition: opacity 0.42s var(--ease-out) 0.1s,
+                        transform 0.7s var(--ease-out) 0.1s,
+                        visibility 0s;
+         }
+         /* the channel-change flick: a single frame of luminance lift across the
+            screen, gone in 180ms. this is the whole CRT gag, and any more of it
+            would be a costume rather than a detail */
+         .screen.switching::after {
+            content: ""; position: absolute; inset: 0; z-index: 5; pointer-events: none;
+            background: var(--text); opacity: 0.05;
+            animation: flick 0.18s steps(2, end) forwards;
+         }
+         @keyframes flick { to { opacity: 0; } }
+
+         @media (prefers-reduced-motion: reduce) {
+            .pane, .pane[data-active] { transition-duration: 0.01ms; transform: none; }
+            .screen.switching::after { display: none; }
+         }
+         .rail .step { opacity: 0.5; font-size: 0.78rem; line-height: 1; }
+         .rail .step:hover { opacity: 1; color: var(--text); }
+      </style>
+   </head>
+   <body>
+      <div class="bezel" aria-hidden="true"></div>
+      <div class="osd osd-ch" aria-hidden="true">ch<b id="ch">01</b><span>/ 04</span></div>
+      <div class="osd osd-hint">scroll · ↑↓ · 1–4</div>
+
+      <nav class="rail" id="rail" aria-label="sections"></nav>
+
+      <main class="screen" id="screen">
+         <section class="pane" data-label="intro">
+            <div class="small">tomás mateo · product engineer · lisbon</div>
+            <h1 style="margin-top:1.5rem">I build products<br />that grow</h1>
+            <p>
+               and teams that ship faster with ai. with clarity. with intention.
+               with measurable impact
+            </p>
+            <div class="small" style="margin-top:2.5rem">product · growth · ai · leadership</div>
+         </section>
+
+         <section class="pane" data-label="proof">
+            <h2>proof, not promises</h2>
+            <div class="list">
+               <div><strong>12.5%</strong> mrr growth in 18 months at streamyard</div>
+               <div><strong>26%</strong> lift in first-time broadcaster activation</div>
+               <div><strong>300%</strong> more signups via referrals in 12 months</div>
+               <div>shipped to <strong>4m+</strong> active users at mercado libre</div>
+               <div>maintained the design system ~<strong>10k</strong> engineers built on</div>
+            </div>
+            <div class="logos">
+               <img src="../assets/logos/mercadolibre.png" alt="mercado libre" class="tall" />
+               <img src="../assets/logos/streamyard.svg" alt="streamyard" />
+               <img src="../assets/logos/cargofive.svg" alt="cargofive" />
+               <img src="../assets/logos/cargoone.svg" alt="cargo.one" />
+               <img src="../assets/logos/factory14.png" alt="factory 14" class="tall" />
+            </div>
+         </section>
+
+         <section class="pane" data-label="method">
+            <div class="stacked">
+               <span>build small</span>
+               <span>ship early</span>
+               <span>measure honestly</span>
+               <span>refine relentlessly</span>
+            </div>
+            <div class="small" style="margin-top:2.5rem">velocity with intention</div>
+         </section>
+
+         <section class="pane" data-label="contact">
+            <h2>thoughtful systems<br />strong teams<br />measurable growth</h2>
+            <button class="cta" type="button">build with me</button>
+         </section>
+      </main>
+
+      <a class="backlink" href="index.html">← lab</a>
+
+      <script>
+         /* ---- shared nav controller ----------------------------------------
+            every candidate in the lab answers to the same inputs so the only
+            variable between them is the transition itself: wheel, arrows, j/k,
+            digits, home/end, hash. the page itself never scrolls. */
+         function labNav({ count, onChange, threshold = 40, cooldown = 620 }) {
+            let index = -1;
+            let locked = false;
+            let acc = 0;
+            let decay;
+
+            function go(i, opts = {}) {
+               const next = Math.max(0, Math.min(count - 1, i));
+               if (next === index) return;
+               const prev = index;
+               index = next;
+               history.replaceState(null, "", "#" + (index + 1));
+               onChange(index, prev, opts);
+            }
+
+            function step(dir) {
+               if (locked) return;
+               const next = index + dir;
+               if (next < 0 || next > count - 1) return;
+               locked = true;
+               go(next);
+               setTimeout(() => (locked = false), cooldown);
+            }
+
+            /* wheel is hijacked rather than ignored. a visitor's first instinct
+               on any page is to scroll, and a page that answers that with
+               nothing reads as broken, not as art */
+            addEventListener(
+               "wheel",
+               (e) => {
+                  e.preventDefault();
+                  if (locked) return;
+                  acc += e.deltaY;
+                  clearTimeout(decay);
+                  decay = setTimeout(() => (acc = 0), 140);
+                  if (Math.abs(acc) > threshold) {
+                     step(acc > 0 ? 1 : -1);
+                     acc = 0;
+                  }
+               },
+               { passive: false }
+            );
+
+            addEventListener("keydown", (e) => {
+               const k = e.key;
+               if (k === "ArrowDown" || k === "ArrowRight" || k === "j" || k === "PageDown") { e.preventDefault(); step(1); }
+               else if (k === "ArrowUp" || k === "ArrowLeft" || k === "k" || k === "PageUp") { e.preventDefault(); step(-1); }
+               else if (k === "Home") { e.preventDefault(); go(0); }
+               else if (k === "End") { e.preventDefault(); go(count - 1); }
+               else if (/^[1-9]$/.test(k) && +k <= count) { e.preventDefault(); go(+k - 1); }
+            });
+
+            let touchY = null;
+            addEventListener("touchstart", (e) => (touchY = e.touches[0].clientY), { passive: true });
+            addEventListener("touchend", (e) => {
+               if (touchY === null) return;
+               const dy = touchY - e.changedTouches[0].clientY;
+               if (Math.abs(dy) > 45) step(dy > 0 ? 1 : -1);
+               touchY = null;
+            }, { passive: true });
+
+            const start = Math.min(count, Math.max(1, parseInt(location.hash.slice(1), 10) || 1)) - 1;
+            go(start, { initial: true });
+
+            return { go, step, get index() { return index; } };
+         }
+
+         /* ---- candidate A wiring ---------------------------------------- */
+         const panes = [...document.querySelectorAll(".pane")];
+         const screen = document.getElementById("screen");
+         const chLabel = document.getElementById("ch");
+         const rail = document.getElementById("rail");
+
+         panes.forEach((p, i) => {
+            const b = document.createElement("button");
+            b.type = "button";
+            b.textContent = String(i + 1).padStart(2, "0");
+            b.addEventListener("click", () => nav.go(i));
+            rail.append(b);
+         });
+         const dots = [...rail.children];
+
+         /* WCAG 2.5.7 Dragging Movements (AA) applies once a page suppresses
+            the user agent's own scrolling, so a visible prev/next pair is a
+            requirement here rather than a convenience. they live inside the
+            rail so they inherit its placement on every candidate */
+         const stepper = (glyph, dir, where) => {
+            const b = document.createElement("button");
+            b.type = "button";
+            b.className = "step";
+            b.textContent = glyph;
+            b.setAttribute("aria-label", dir < 0 ? "previous section" : "next section");
+            b.addEventListener("click", () => nav.step(dir));
+            rail[where](b);
+         };
+         stepper("\u2191", -1, "prepend");
+         stepper("\u2193", 1, "append");
+
+         const nav = labNav({
+            count: panes.length,
+            onChange(i, prev, { initial } = {}) {
+               panes.forEach((p, n) => {
+                  p.toggleAttribute("data-active", n === i);
+                  p.inert = n !== i;
+               });
+               dots.forEach((d, n) => d.setAttribute("aria-current", String(n === i)));
+               chLabel.textContent = String(i + 1).padStart(2, "0");
+               if (initial) return;
+               screen.classList.remove("switching");
+               void screen.offsetWidth;
+               screen.classList.add("switching");
+            },
+         });
+      </script>
+      <!-- lab chrome, not part of this candidate: delete this line to ship -->
+      <script src="switcher.js" defer></script>
+   </body>
+</html>

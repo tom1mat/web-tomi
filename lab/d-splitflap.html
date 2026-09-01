@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>lab d · split-flap</title>
+      <link rel="icon" type="image/png" href="../assets/favicon.png" />
+      <style>
+         /* ---- D: split-flap ----------------------------------------------
+            exempt from the shared lab skin by design: a departure board needs
+            its own type and its own colour to exist at all. the mechanic is
+            that the board never rebuilds — the same physical cells re-flip
+            into new content, which is also why only changed cells animate */
+         :root {
+            --bg: #0a0a0b;
+            --board: #17171a;
+            --board-hi: #1e1e22;
+            --amber: #ffb000;
+            --text: #dcdcdc;
+            --muted: #6d6d73;
+            --line: rgba(255, 255, 255, 0.08);
+            --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+            --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+         }
+         * { box-sizing: border-box; margin: 0; padding: 0; }
+         html, body { height: 100%; }
+         body {
+            font-family: var(--mono);
+            background: var(--bg);
+            color: var(--text);
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+            /* the faint vertical banding is the cabinet the board is mounted in */
+            background-image: repeating-linear-gradient(
+               90deg, rgba(255,255,255,0.012) 0 1px, transparent 1px 3px);
+         }
+
+         .cabinet {
+            position: fixed; inset: 0;
+            display: flex; flex-direction: column; justify-content: center;
+            padding: 0 clamp(1.5rem, 5vw, 5rem);
+         }
+
+         .statusbar {
+            position: fixed; top: 0; left: 0; right: 0; height: 40px;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 clamp(1.5rem, 5vw, 5rem);
+            border-bottom: 1px solid var(--line);
+            font-size: 0.66rem; letter-spacing: 0.22em; text-transform: uppercase;
+            color: var(--muted); background: rgba(10, 10, 11, 0.9);
+         }
+         .statusbar b { color: var(--amber); font-weight: 500; }
+         .clock { font-variant-numeric: tabular-nums; }
+
+         /* ---- the flap grid ---- */
+         .headline { display: grid; gap: 5px; }
+         .flap-line { display: flex; gap: 3px; }
+         .cell {
+            /* each cell is a physical flap: fixed size, dark housing, a seam
+               across the middle, and its own tiny perspective so the leaf
+               actually rotates through space instead of just scaling */
+            position: relative;
+            width: clamp(20px, 2.55vw, 40px);
+            height: clamp(28px, 3.6vw, 56px);
+            background: var(--board);
+            border-radius: 2px;
+            display: grid; place-items: center;
+            perspective: 90px;
+            overflow: hidden;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+         }
+         .cell::after {
+            /* the seam. without this line none of it reads as split-flap */
+            content: ""; position: absolute; left: 0; right: 0; top: 50%;
+            height: 1px; background: var(--bg); opacity: 0.85; z-index: 2;
+         }
+         .cell span {
+            display: block;
+            font-size: clamp(0.85rem, 1.75vw, 1.65rem);
+            font-weight: 600; color: var(--amber); line-height: 1;
+            backface-visibility: hidden;
+         }
+         .cell.blank { background: var(--board-hi); opacity: 0.35; }
+         .cell.flip span { animation: flap 62ms linear; }
+         @keyframes flap {
+            from { transform: rotateX(-84deg); }
+            to   { transform: rotateX(0deg); }
+         }
+
+         /* ---- text rows ---- */
+         .rows { margin-top: clamp(1.6rem, 3vw, 2.8rem); display: grid; gap: 0.55rem; }
+         .row {
+            display: flex;
+            font-size: clamp(0.62rem, 0.92vw, 0.86rem);
+            letter-spacing: 0.06em;
+            color: var(--text);
+            min-height: 1.1em;
+         }
+         .row i { font-style: normal; white-space: pre; opacity: 1;
+                  transition: color 0.2s linear; }
+         .row i.scramble { color: var(--muted); }
+
+         .status {
+            margin-top: clamp(1.4rem, 2.6vw, 2.4rem);
+            font-size: 0.66rem; letter-spacing: 0.22em; text-transform: uppercase;
+            color: var(--muted); min-height: 1em;
+         }
+
+         .logos {
+            margin-top: 1.8rem; display: flex; align-items: center; gap: 2.2rem;
+            flex-wrap: wrap; opacity: 0; visibility: hidden;
+            transition: opacity 0.5s var(--ease-out) 0.5s, visibility 0s linear 1s;
+         }
+         .logos[data-on] { opacity: 0.5; visibility: visible; transition-delay: 0.6s, 0s; }
+         .logos img { height: 18px; width: auto; filter: grayscale(1) brightness(2.6); }
+         .logos img.tall { height: 24px; }
+
+         .cta {
+            margin-top: 2rem; padding: 0.8rem 1.6rem;
+            border: 1px solid var(--amber); border-radius: 2px; background: none;
+            color: var(--amber); font: inherit; font-size: 0.72rem; font-weight: 600;
+            letter-spacing: 0.16em; text-transform: uppercase; cursor: pointer;
+            align-self: flex-start;
+            opacity: 0; visibility: hidden;
+            transition: opacity 0.5s var(--ease-out), visibility 0s linear 0.5s,
+                        background 0.25s, color 0.25s;
+         }
+         .cta[data-on] { opacity: 1; visibility: visible; transition-delay: 0.7s, 0s, 0s, 0s; }
+         .cta:hover { background: var(--amber); color: var(--bg); }
+
+         /* chrome */
+         .rail { position: fixed; bottom: 22px; left: clamp(1.5rem, 5vw, 5rem); z-index: 70;
+                 display: flex; gap: 0.9rem; }
+         .rail button { background: none; border: 0; padding: 0; cursor: pointer; font: inherit;
+                        font-size: 0.62rem; font-weight: 600; letter-spacing: 0.16em;
+                        color: var(--muted); font-variant-numeric: tabular-nums;
+                        transition: color 0.3s var(--ease-out); }
+         .rail button:hover { color: var(--text); }
+         .rail button[aria-current="true"] { color: var(--amber); }
+         .rail button[aria-current="true"]::after {
+            content: ""; display: block; height: 1px; background: var(--amber); margin-top: 5px; }
+         .hint { position: fixed; bottom: 22px; right: clamp(1.5rem, 5vw, 5rem); z-index: 70;
+                 font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase;
+                 color: var(--muted); opacity: 0.55; }
+         .backlink { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
+                     z-index: 90; font-size: 0.58rem; letter-spacing: 0.16em;
+                     text-transform: uppercase; color: var(--muted); text-decoration: none;
+                     opacity: 0.3; transition: opacity 0.2s; }
+         .backlink:hover { opacity: 1; }
+
+         @media (prefers-reduced-motion: reduce) {
+            .cell.flip span { animation: none; }
+            .logos, .cta { transition-duration: 0.01ms; }
+         }
+         .rail .step { opacity: 0.5; font-size: 0.78rem; line-height: 1; }
+         .rail .step:hover { opacity: 1; color: var(--text); }
+      </style>
+   </head>
+   <body>
+      <div class="statusbar">
+         <span><b>departures</b> · lis</span>
+         <span class="clock" id="clock">--:--:--</span>
+      </div>
+
+      <main class="cabinet">
+         <div class="headline" id="headline"></div>
+         <div class="rows" id="rows"></div>
+         <div class="status" id="status"></div>
+         <div class="logos" id="logos">
+            <img src="../assets/logos/mercadolibre.png" alt="mercado libre" class="tall" />
+            <img src="../assets/logos/streamyard.svg" alt="streamyard" />
+            <img src="../assets/logos/cargofive.svg" alt="cargofive" />
+            <img src="../assets/logos/cargoone.svg" alt="cargo.one" />
+            <img src="../assets/logos/factory14.png" alt="factory 14" class="tall" />
+         </div>
+         <button class="cta" id="cta" type="button">build with me</button>
+      </main>
+
+      <nav class="rail" id="rail" aria-label="sections"></nav>
+      <div class="hint">scroll · ↑↓ · 1–4</div>
+      <a class="backlink" href="index.html">← lab</a>
+
+      <script>
+         /* ---- shared nav controller (identical across the lab) ---------- */
+         function labNav({ count, onChange, threshold = 40, cooldown = 620 }) {
+            let index = -1, locked = false, acc = 0, decay;
+            function go(i, opts = {}) {
+               const next = Math.max(0, Math.min(count - 1, i));
+               if (next === index && !opts.force) return;
+               const prev = index; index = next;
+               history.replaceState(null, "", "#" + (index + 1));
+               onChange(index, prev, opts);
+            }
+            function step(dir) {
+               if (locked) return;
+               const next = index + dir;
+               if (next < 0 || next > count - 1) return;
+               locked = true; go(next);
+               setTimeout(() => (locked = false), cooldown);
+            }
+            addEventListener("wheel", (e) => {
+               e.preventDefault();
+               if (locked) return;
+               acc += e.deltaY;
+               clearTimeout(decay);
+               decay = setTimeout(() => (acc = 0), 140);
+               if (Math.abs(acc) > threshold) { step(acc > 0 ? 1 : -1); acc = 0; }
+            }, { passive: false });
+            addEventListener("keydown", (e) => {
+               const k = e.key;
+               if (k === "ArrowDown" || k === "ArrowRight" || k === "j" || k === "PageDown") { e.preventDefault(); step(1); }
+               else if (k === "ArrowUp" || k === "ArrowLeft" || k === "k" || k === "PageUp") { e.preventDefault(); step(-1); }
+               else if (k === "Home") { e.preventDefault(); go(0); }
+               else if (k === "End") { e.preventDefault(); go(count - 1); }
+               else if (/^[1-9]$/.test(k) && +k <= count) { e.preventDefault(); go(+k - 1); }
+            });
+            let touchY = null;
+            addEventListener("touchstart", (e) => (touchY = e.touches[0].clientY), { passive: true });
+            addEventListener("touchend", (e) => {
+               if (touchY === null) return;
+               const dy = touchY - e.changedTouches[0].clientY;
+               if (Math.abs(dy) > 45) step(dy > 0 ? 1 : -1);
+               touchY = null;
+            }, { passive: true });
+            const start = Math.min(count, Math.max(1, parseInt(location.hash.slice(1), 10) || 1)) - 1;
+            go(start, { initial: true });
+            return { go, step, get index() { return index; } };
+         }
+
+         /* ---- board configuration --------------------------------------- */
+         const HEAD_LINES = 4;   // the board has a fixed number of flaps, always
+         const HEAD_COLS = 20;
+         const ROW_COUNT = 5;
+         const ROW_COLS = 54;
+         const CHARSET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.,·%+~";
+         const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+         const SECTIONS = [
+            {
+               head: ["I BUILD PRODUCTS", "THAT GROW"],
+               rows: [
+                  "AND TEAMS THAT SHIP FASTER WITH AI.",
+                  "WITH CLARITY. WITH INTENTION.",
+                  "WITH MEASURABLE IMPACT.",
+               ],
+               status: "product · growth · ai · leadership",
+            },
+            {
+               head: ["PROOF, NOT", "PROMISES"],
+               rows: [
+                  "12.5% MRR GROWTH IN 18 MONTHS AT STREAMYARD",
+                  "26% LIFT IN FIRST-TIME BROADCASTER ACTIVATION",
+                  "300% MORE SIGNUPS VIA REFERRALS IN 12 MONTHS",
+                  "SHIPPED TO 4M+ ACTIVE USERS AT MERCADO LIBRE",
+                  "MAINTAINED THE DESIGN SYSTEM ~10K ENGINEERS USED",
+               ],
+               status: "",
+               logos: true,
+            },
+            {
+               head: ["BUILD SMALL", "SHIP EARLY", "MEASURE HONESTLY", "REFINE RELENTLESSLY"],
+               rows: [],
+               status: "velocity with intention",
+            },
+            {
+               head: ["THOUGHTFUL SYSTEMS", "STRONG TEAMS", "MEASURABLE GROWTH"],
+               rows: [],
+               status: "",
+               cta: true,
+            },
+         ];
+
+         /* ---- build the physical board once ----------------------------- */
+         const headline = document.getElementById("headline");
+         const rowsEl = document.getElementById("rows");
+         const statusEl = document.getElementById("status");
+         const logosEl = document.getElementById("logos");
+         const ctaEl = document.getElementById("cta");
+         const rail = document.getElementById("rail");
+
+         const headCells = [];
+         for (let l = 0; l < HEAD_LINES; l++) {
+            const line = document.createElement("div");
+            line.className = "flap-line";
+            const cells = [];
+            for (let c = 0; c < HEAD_COLS; c++) {
+               const cell = document.createElement("div");
+               cell.className = "cell blank";
+               const span = document.createElement("span");
+               span.textContent = "";
+               cell.append(span);
+               line.append(cell);
+               cells.push({ cell, span, current: " ", timer: null });
+            }
+            headline.append(line);
+            headCells.push(cells);
+         }
+
+         const rowCells = [];
+         for (let r = 0; r < ROW_COUNT; r++) {
+            const row = document.createElement("div");
+            row.className = "row";
+            const glyph = document.createElement("i");
+            row.append(glyph);
+            rowsEl.append(row);
+            rowCells.push({ glyph, timer: null });
+         }
+
+         const rnd = () => CHARSET[(Math.random() * CHARSET.length) | 0];
+
+         /* a cell only flips if its target actually differs from what it's
+            showing. that's how a real board behaves, it halves the motion on
+            screen, and it makes the shared letters between two headlines sit
+            perfectly still while everything around them turns over */
+         function flipCell(slot, target, delay) {
+            clearTimeout(slot.timer);
+            if (slot.current === target) return;
+            const steps = REDUCED ? 1 : 4 + ((Math.random() * 6) | 0);
+            let n = 0;
+            const tick = () => {
+               const last = n === steps;
+               const ch = last ? target : rnd();
+               slot.span.textContent = ch === " " ? "" : ch;
+               slot.cell.classList.toggle("blank", ch === " ");
+               if (!REDUCED) {
+                  slot.cell.classList.remove("flip");
+                  void slot.cell.offsetWidth;
+                  slot.cell.classList.add("flip");
+               }
+               if (last) { slot.current = target; return; }
+               n++;
+               slot.timer = setTimeout(tick, 62);
+            };
+            slot.timer = setTimeout(tick, delay);
+         }
+
+         function setHeadline(lines) {
+            for (let l = 0; l < HEAD_LINES; l++) {
+               const text = (lines[l] || "").slice(0, HEAD_COLS);
+               for (let c = 0; c < HEAD_COLS; c++) {
+                  /* stagger reads as the flip travelling across the board
+                     rather than every flap firing at once */
+                  flipCell(headCells[l][c], text[c] || " ", l * 55 + c * 26);
+               }
+            }
+         }
+
+         /* rows get a cheaper treatment than the flaps: a left-to-right
+            scramble resolve. running 54 flaps per row would be noise, and the
+            board's own hierarchy says these lines are secondary */
+         function setRow(slot, text, delay) {
+            clearTimeout(slot.timer);
+            const target = text || "";
+            if (REDUCED) { slot.glyph.textContent = target; slot.glyph.classList.remove("scramble"); return; }
+            let done = 0;
+            slot.glyph.classList.add("scramble");
+            const tick = () => {
+               if (done > target.length) {
+                  slot.glyph.textContent = target;
+                  slot.glyph.classList.remove("scramble");
+                  return;
+               }
+               let out = target.slice(0, done);
+               for (let i = done; i < target.length; i++) out += target[i] === " " ? " " : rnd();
+               slot.glyph.textContent = out;
+               done += 2;
+               slot.timer = setTimeout(tick, 26);
+            };
+            slot.timer = setTimeout(tick, delay);
+         }
+
+         SECTIONS.forEach((s, i) => {
+            const b = document.createElement("button");
+            b.type = "button";
+            b.textContent = String(i + 1).padStart(2, "0");
+            b.addEventListener("click", () => nav.go(i));
+            rail.append(b);
+         });
+         const dots = [...rail.children];
+
+         /* WCAG 2.5.7 Dragging Movements (AA) applies once a page suppresses
+            the user agent's own scrolling, so a visible prev/next pair is a
+            requirement here rather than a convenience. they live inside the
+            rail so they inherit its placement on every candidate */
+         const stepper = (glyph, dir, where) => {
+            const b = document.createElement("button");
+            b.type = "button";
+            b.className = "step";
+            b.textContent = glyph;
+            b.setAttribute("aria-label", dir < 0 ? "previous section" : "next section");
+            b.addEventListener("click", () => nav.step(dir));
+            rail[where](b);
+         };
+         stepper("\u2191", -1, "prepend");
+         stepper("\u2193", 1, "append");
+
+         const nav = labNav({
+            count: SECTIONS.length,
+            cooldown: 900,
+            onChange(i) {
+               const s = SECTIONS[i];
+               setHeadline(s.head);
+               for (let r = 0; r < ROW_COUNT; r++) setRow(rowCells[r], s.rows[r] || "", 260 + r * 70);
+               statusEl.textContent = s.status || "";
+               logosEl.toggleAttribute("data-on", !!s.logos);
+               ctaEl.toggleAttribute("data-on", !!s.cta);
+               dots.forEach((d, n) => d.setAttribute("aria-current", String(n === i)));
+            },
+         });
+
+         const clock = document.getElementById("clock");
+         const tickClock = () => {
+            clock.textContent = new Date().toISOString().slice(11, 19) + " z";
+         };
+         tickClock();
+         setInterval(tickClock, 1000);
+      </script>
+      <!-- lab chrome, not part of this candidate: delete this line to ship -->
+      <script src="switcher.js" defer></script>
+   </body>
+</html>
